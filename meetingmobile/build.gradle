@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.example.meetingapp"
+        applicationId "com.example.meetingmobile"
         minSdkVersion 16
         targetSdkVersion 16
         versionCode 1
