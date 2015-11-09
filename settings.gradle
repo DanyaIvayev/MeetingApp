@@ -1,1 +1,1 @@
-include ':app', ':meetingmobile'
+include ':app', ':meeting', ':participant'

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id=":app" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="MeetingApp" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+<module external.linked.project.id=":meeting" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="MeetingApp" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="android-gradle" name="Android-Gradle">
       <configuration>
-        <option name="GRADLE_PROJECT_PATH" value=":app" />
+        <option name="GRADLE_PROJECT_PATH" value=":meeting" />
       </configuration>
     </facet>
     <facet type="android" name="Android">
@@ -72,8 +72,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dependency-cache" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dex" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dex-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.3/jars" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jacoco" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/javaResources" />
@@ -91,28 +89,60 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="jackson-xc-1.9.2" level="project" />
     <orderEntry type="library" exported="" name="stax-api-1.0-2" level="project" />
+    <orderEntry type="library" exported="" name="1_stax-api-1.0-2" level="project" />
     <orderEntry type="library" exported="" name="javax.ejb-api-3.2-b01" level="project" />
-    <orderEntry type="library" exported="" name="jetty-http-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="test-jetty-servlet-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jdom-1.0" level="project" />
     <orderEntry type="library" exported="" name="jetty-io-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="activation-1.1" level="project" />
-    <orderEntry type="library" exported="" name="servlet-api-2.4" level="project" />
-    <orderEntry type="library" exported="" name="javax.xml.rpc-api-1.1" level="project" />
-    <orderEntry type="library" exported="" name="jetty-xml-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-server-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jersey-container-servlet-core" level="project" />
+    <orderEntry type="library" exported="" name="wadl-cmdline-1.1.2" level="project" />
+    <orderEntry type="library" exported="" name="jersey-common" level="project" />
+    <orderEntry type="library" exported="" name="jersey-grizzly-1.12" level="project" />
     <orderEntry type="library" exported="" name="jetty-webapp-8.0.1.v20110908" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="support-annotations-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="jetty-continuation-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-util-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jetty-security-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jetty-http-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="rome-1.0" level="project" />
+    <orderEntry type="library" exported="" name="javax.xml.rpc-api-1.1" level="project" />
+    <orderEntry type="library" exported="" name="activation-1.1" level="project" />
+    <orderEntry type="library" exported="" name="1_activation-1.1" level="project" />
+    <orderEntry type="library" exported="" name="wadl-core-1.1.2" level="project" />
+    <orderEntry type="library" exported="" name="jackson-jaxrs-1.9.2" level="project" />
     <orderEntry type="library" exported="" name="servlet-api-3.0.20100224" level="project" />
+    <orderEntry type="library" exported="" name="localizer-1.0" level="project" />
+    <orderEntry type="library" exported="" name="jersey-bundle-1.12" level="project" />
+    <orderEntry type="library" exported="" name="jaxb-api-2.1" level="project" />
+    <orderEntry type="library" exported="" name="jackson-mapper-asl-1.9.2" level="project" />
+    <orderEntry type="library" exported="" name="jersey-container-servlet" level="project" />
+    <orderEntry type="library" exported="" name="jaxb-xjc-2.2" level="project" />
+    <orderEntry type="library" exported="" name="jersey-server" level="project" />
+    <orderEntry type="library" exported="" name="test-jetty-servlet-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="FastInfoset-1.2.12" level="project" />
+    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
+    <orderEntry type="library" exported="" name="jaxb-impl-2.2" level="project" />
+    <orderEntry type="library" exported="" name="persistence-api-1.0.2" level="project" />
+    <orderEntry type="library" exported="" name="jettison-1.1" level="project" />
+    <orderEntry type="library" exported="" name="mail-1.4.4" level="project" />
+    <orderEntry type="library" exported="" name="servlet-api-2.4" level="project" />
+    <orderEntry type="library" exported="" name="jetty-server-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jetty-continuation-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jersey-client" level="project" />
+    <orderEntry type="library" exported="" name="jetty-util-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="comresrcgen-1.0" level="project" />
     <orderEntry type="library" exported="" name="javax.transaction-api-1.2-b01" level="project" />
     <orderEntry type="library" exported="" name="jetty-servlet-8.0.1.v20110908" level="project" />
     <orderEntry type="library" exported="" name="jaxb-api-2.2.4" level="project" />
-    <orderEntry type="library" exported="" name="jetty-security-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jersey-multipart-1.12" level="project" />
+    <orderEntry type="library" exported="" name="javax.ws.rs-api-2.0" level="project" />
+    <orderEntry type="library" exported="" name="asm-3.3.1" level="project" />
+    <orderEntry type="library" exported="" name="grizzly-servlet-webserver-1.9.45" level="project" />
+    <orderEntry type="library" exported="" name="mimepull-1.3" level="project" />
+    <orderEntry type="library" exported="" name="jetty-xml-8.0.1.v20110908" level="project" />
+    <orderEntry type="library" exported="" name="jackson-core-asl-1.9.2" level="project" />
+    <orderEntry type="library" exported="" name="support-annotations-21.0.3" level="project" />
+    <orderEntry type="library" exported="" name="jersey-client-1.12" level="project" />
+    <orderEntry type="library" exported="" name="jersey-core-1.12" level="project" />
     <orderEntry type="module" module-name="participant" exported="" />
-    <orderEntry type="module" module-name="meeting" exported="" />
   </component>
 </module>
