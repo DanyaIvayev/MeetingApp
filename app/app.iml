@@ -91,28 +91,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="stax-api-1.0-2" level="project" />
-    <orderEntry type="library" exported="" name="javax.ejb-api-3.2-b01" level="project" />
-    <orderEntry type="library" exported="" name="jetty-http-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="test-jetty-servlet-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-io-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="activation-1.1" level="project" />
-    <orderEntry type="library" exported="" name="servlet-api-2.4" level="project" />
-    <orderEntry type="library" exported="" name="javax.xml.rpc-api-1.1" level="project" />
-    <orderEntry type="library" exported="" name="jetty-xml-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-server-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-webapp-8.0.1.v20110908" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="jetty-continuation-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jetty-util-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="servlet-api-3.0.20100224" level="project" />
-    <orderEntry type="library" exported="" name="javax.transaction-api-1.2-b01" level="project" />
-    <orderEntry type="library" exported="" name="jetty-servlet-8.0.1.v20110908" level="project" />
-    <orderEntry type="library" exported="" name="jaxb-api-2.2.4" level="project" />
-    <orderEntry type="library" exported="" name="jetty-security-8.0.1.v20110908" level="project" />
-    <orderEntry type="module" module-name="participant" exported="" />
-    <orderEntry type="module" module-name="meeting" exported="" />
+    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
   </component>
 </module>

@@ -1,1 +1,1 @@
-include ':app', ':meeting', ':participant'
+include ':app', ':meeting', ':participant', ':rest'
