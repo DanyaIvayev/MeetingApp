@@ -59,13 +59,13 @@ public class MainPageSvc {
 
     @GET
     @Path("/user")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Boolean getMessageQueryParam(@QueryParam("userName") String username,
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getMessageQueryParam(@QueryParam("userName") String username,
                                         @QueryParam("password") String password) {
         if(this.username.equals(username)&& this.password.equals(password))
-            return true;
+            return "{\"response\":\"true\"}";
         else
-            return false;
+            return "{\"response\":\"false\"}";
     }
 
 
