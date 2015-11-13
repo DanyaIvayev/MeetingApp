@@ -1,21 +1,28 @@
 package com.example.meetingapp;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
+import android.view.View;
 import android.view.ViewConfiguration;
+import android.widget.Toast;
+
 import java.lang.reflect.Field;
 
 public class MainActivity extends ActionBarActivity {
-
+    private static final String TAG = "MainActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,6 +31,11 @@ public class MainActivity extends ActionBarActivity {
         ab.setDisplayShowHomeEnabled(true);
         ab.setIcon(R.drawable.ic_launcher);
         getOverflowMenu();
+        boolean isOnline = isOnline();
+        if(isOnline)
+            showLoginDialog();
+        else
+            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -48,15 +60,10 @@ public class MainActivity extends ActionBarActivity {
             } break;
 
         }
-
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
         return super.onOptionsItemSelected(item);
     }
-    public void showAlert() {
+
+    private void showAlert() {
 
         new AlertDialog.Builder(this).setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.quit)
@@ -74,7 +81,8 @@ public class MainActivity extends ActionBarActivity {
                 .setNegativeButton(R.string.no, null)
                 .show();
     }
-    public void showAboutDialog(){
+
+    private void showAboutDialog(){
         Drawable icon = ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.ic_dialog_info).mutate();
         icon.setColorFilter(new ColorMatrixColorFilter(new float[] {
                 0.5f,0,0, 0, 0,
@@ -110,5 +118,30 @@ public class MainActivity extends ActionBarActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    private void showLoginDialog(){
+        LayoutInflater inflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.dialog_text, null);
+        new AlertDialog.Builder(this)
+                .setCancelable(false)
+
+                .setIcon(R.drawable.password_dialog)
+                .setTitle(R.string.loginTitle)
+                .setMessage(R.string.loginText)
+                .setView(v)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+
+                }).show();
+    }
+
+    public boolean isOnline(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null &&
+                cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

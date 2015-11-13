@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/meeting" />
             <option value="$PROJECT_DIR$/participant" />
             <option value="$PROJECT_DIR$/rest" />
+            <option value="$PROJECT_DIR$/volley" />
           </set>
         </option>
       </GradleProjectSettings>

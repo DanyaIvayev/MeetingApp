@@ -14,4 +14,9 @@
     <string name="really_quit">Вы действительно хотите выйти?</string>
     <string name="ok">OK</string>
     <string name="aboutText">Laboratory work #3\nAuthor: Danis Ivayev\nGroup: 6122M\nUniversity: SSAU</string>
+    <string name="userName">Логин: </string>
+    <string name="password">Пароль:</string>
+    <string name="loginTitle">Войдите в систему</string>
+    <string name="loginText">Введите логин и пароль для доступа к серверу</string>
+    <string name="workInternet">Отсутствует интернет соединение</string>
 </resources>
