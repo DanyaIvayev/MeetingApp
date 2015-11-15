@@ -1,9 +1,12 @@
 package com.example.meetingapp;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -41,6 +44,11 @@ public class MainActivity extends ActionBarActivity {
     private static final String TAG = "MainActivity";
     private View userDialog;
     private JSONObject res;
+    public static final String APP_PREFERENCES = "mysettings";
+    public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
+    public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
+    private SharedPreferences preferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,10 +58,17 @@ public class MainActivity extends ActionBarActivity {
         ab.setIcon(R.drawable.ic_launcher);
         getOverflowMenu();
         boolean isOnline = isOnline();
-        if (isOnline)
-            showLoginDialog();
-        else
-            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+        //if (isOnline)
+            //showLoginDialog();
+        //else
+        if(!isOnline)
+            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_LONG).show();
+//        preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+//        if(preferences!=null){
+//            if(preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)){
+//
+//            }
+//        }
     }
 
     @Override
@@ -69,7 +84,15 @@ public class MainActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+
         switch (id) {
+            case R.id.action_settings:{
+                Intent intent;
+                Activity currentActivity = this;
+                intent = new Intent(currentActivity, SettingsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                currentActivity.startActivity(intent);
+            } break;
             case R.id.action_about: {
                 showAboutDialog();
             }
@@ -145,7 +168,6 @@ public class MainActivity extends ActionBarActivity {
         final View userDialog = inflater.inflate(R.layout.dialog_text, null);
         new AlertDialog.Builder(this)
                 .setCancelable(false)
-
                 .setIcon(R.drawable.password_dialog)
                 .setTitle(R.string.loginTitle)
                 .setMessage(R.string.loginText)
@@ -206,52 +228,4 @@ public class MainActivity extends ActionBarActivity {
        Log.d(TAG, "printRes response = "+ res.toString());
    }
 
-    public class MeetingDataLoader extends AsyncTask<Void, Void, JSONObject> {
-        Context context;
-
-        public MeetingDataLoader(Context context) {
-            this.context = context;
-        }
-
-        @Override
-        protected void onPreExecute() {
-
-        }
-
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            RequestQueue queue = Volley.newRequestQueue(context);
-            String url = "http://192.168.43.246:8080/rest/rest/meeting/getMeeting";
-            JsonObjectRequest request =
-                    new JsonObjectRequest(Request.Method.GET, url, null,
-                            new Response.Listener<JSONObject>() {
-                                @Override
-                                public void onResponse(JSONObject response) {
-                                    try {
-                                        JSONArray array = new JSONArray(response.toString());
-
-                                    } catch (JSONException je){
-                                        Log.e(TAG, "onResponse "+ je.getMessage());
-                                    }
-                                }
-                            },
-                            new Response.ErrorListener() {
-                                @Override
-                                public void onErrorResponse(VolleyError error) {
-                                    Log.e(TAG, "onErrorResponse Request failed: " + error.toString());
-                                }
-
-                            });
-            request.setRetryPolicy(
-                    new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
-            queue.add(request);
-            return null;
-        }
-        @Override
-        protected void onPostExecute(JSONObject result) {
-            super.onPostExecute(result);
-
-        }
-
-    }
 }

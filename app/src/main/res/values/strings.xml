@@ -2,7 +2,7 @@
     <string name="app_name">MeetingApp</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Настройки</string>
     <string name="action_add">Создать встречу</string>
     <string name="action_search">Поиск по описанию</string>
     <string name="action_exit">Выход</string>
@@ -18,5 +18,7 @@
     <string name="password">Пароль:</string>
     <string name="loginTitle">Войдите в систему</string>
     <string name="loginText">Введите логин и пароль для доступа к серверу</string>
+    <string name="loginSummary">Вход не произведен</string>
     <string name="workInternet">Отсутствует интернет соединение</string>
+    <string name="pref_category">Настройки Аккаунта</string>
 </resources>
