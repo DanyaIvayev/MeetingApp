@@ -22,4 +22,10 @@
     <string name="workInternet">Отсутствует интернет соединение</string>
     <string name="missAccount">Необходимо ввести логин и пароль от сервера. Зайдите в Меню -> Настройки-> Войдите в систему</string>
     <string name="pref_category">Настройки Аккаунта</string>
+    <string name="iconContentDescription">Icon for delete</string>
+    <string name="iconListContent">Icon for list item</string>
+    <string name="meetingTextView">meetingName</string>
+    <string name="beginDateText">beginDate</string>
+    <string name="endDateText">endDate</string>
+    <string name="urlGetMeeting">http://192.168.43.246:8080/rest/rest/meeting/getMeeting</string>
 </resources>

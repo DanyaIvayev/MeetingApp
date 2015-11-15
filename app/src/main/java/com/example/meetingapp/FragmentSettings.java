@@ -1,12 +1,7 @@
 package com.example.meetingapp;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.DialogPreference;
-import android.preference.Preference;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 
 /**
  * Created by Дамир on 14.11.2015.

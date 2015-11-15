@@ -12,7 +12,7 @@ import javax.ejb.Stateless;
 
 
 @Stateless
-@Path("/hello")
+@Path("/")
 public class MainPageSvc {
 
     private String username = "user";
@@ -24,7 +24,7 @@ public class MainPageSvc {
         String data = "<html><head>\n" +
                 " <meta http-equiv=\"CONTENT-TYPE\" content=\"text/html; charset=UTF-8\"/>\n" +
                 " <title>MEETING APP</title>\n" +
-                "</head>\n" + "<body><form action=\"meeting/setMeeting\" method=\"POST\"><h1>Создайте встречу</h1>\n" +
+                "</head>\n" + "<body><form action=\"meeting/setMeeting\" method=\"GET\"><h1>Создайте встречу</h1>\n" +
                 "  <table>\n" +
                 "    <tbody>\n" +
                 "    <tr>\n" +

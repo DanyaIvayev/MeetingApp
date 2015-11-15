@@ -24,6 +24,10 @@
             android:label="@string/action_settings"
             android:theme="@android:style/Theme.Holo.Light.DarkActionBar" >
         </activity>
+        <service
+            android:name=".RestClientService"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

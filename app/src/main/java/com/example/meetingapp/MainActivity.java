@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
-import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -18,11 +17,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -31,25 +36,24 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 public class MainActivity extends ActionBarActivity {
     private static final String TAG = "MainActivity";
-    private View userDialog;
     private JSONObject res;
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
     public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
     private SharedPreferences preferences;
-    private String username;
-    private String password;
+    String username;
+    String password;
+    ListView mListView;
+    String jsonFileName = "messages.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,21 +63,26 @@ public class MainActivity extends ActionBarActivity {
         ab.setDisplayShowHomeEnabled(true);
         ab.setIcon(R.drawable.ic_launcher);
         getOverflowMenu();
-
-
     }
 
     @Override
     public void onResume(){
         super.onResume();
         boolean isOnline = isOnline();
-        if(!isOnline)
-            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+
         preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         if(preferences!=null){
             if(preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)){
                 username = preferences.getString(APP_PREFERENCES_NAME, "");
                 password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
+                if(!isOnline)
+                    Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+                else{
+                    Intent i = new Intent(this, RestClientService.class);
+                    i.putExtra(APP_PREFERENCES_NAME, username);
+                    i.putExtra(APP_PREFERENCES_PASSWORD, password);
+                    this.startService(i);
+                }
             } else {
                 Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
             }
@@ -237,5 +246,170 @@ public class MainActivity extends ActionBarActivity {
        Log.d(TAG, "printRes response = "+ res.toString());
    }
 
+    class TransferItem{
+        private String meetingName;
+        private String beginDate;
+        private String endDate;
+        public TransferItem(String meetingName, String beginDate, String endDate) {
+            this.meetingName = meetingName;
+            this.beginDate = beginDate;
+            this.endDate = endDate;
+        }
 
+        public String getBeginDate() {
+            return beginDate;
+        }
+
+        public void setBeginDate(String beginDate) {
+            this.beginDate = beginDate;
+        }
+
+        public String getMeetingName() {
+            return meetingName;
+        }
+
+        public void setMeetingName(String meetingName) {
+            this.meetingName = meetingName;
+        }
+
+        public String getEndDate() {
+            return endDate;
+        }
+
+        public void setEndDate(String endDate) {
+            this.endDate = endDate;
+        }
+    }
+    public class TransferAdapter extends ArrayAdapter<TransferItem> {
+        private ArrayList<TransferItem> items;
+        private TransferViewHolder transferHolder;
+
+
+        private class TransferViewHolder {
+            TextView beginDate;
+            TextView meetingName;
+            TextView endDate;
+            RelativeLayout listItem;
+            LinearLayout mainView;
+        }
+
+        public TransferAdapter(Context context, int tvResId, ArrayList<TransferItem> items) {
+            super(context, tvResId, items);
+            this.items = items;
+        }
+
+        @Override
+        public View getView(int pos, View convertView, ViewGroup parent) {
+            View v = convertView;
+            if (v == null) {
+                LayoutInflater vi = (LayoutInflater) getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
+                //v = vi.inflate(R.layout.feed_view, null);
+                v = vi.inflate(R.layout.list_item, null);
+                transferHolder = new TransferViewHolder();
+                transferHolder.mainView = (LinearLayout) v.findViewById(R.id.mainview);
+                transferHolder.listItem = (RelativeLayout) v.findViewById(R.id.listitem);
+                transferHolder.meetingName = (TextView) v.findViewById(R.id.meetingName);
+                transferHolder.beginDate = (TextView) v.findViewById(R.id.beginDate);
+                transferHolder.endDate = (TextView) v.findViewById(R.id.endDate);
+                v.setTag(transferHolder);
+            } else transferHolder = (TransferViewHolder) v.getTag();
+
+            TransferItem transfer = items.get(pos);
+
+            if (transfer != null) {
+                transferHolder.meetingName.setText(transfer.getMeetingName());
+                transferHolder.beginDate.setText(transfer.getBeginDate());
+                transferHolder.endDate.setText(transfer.getEndDate());
+            }
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) transferHolder.mainView.getLayoutParams();
+            params.rightMargin = 0;
+            params.leftMargin = 0;
+            transferHolder.mainView.setLayoutParams(params);
+
+            v.setOnTouchListener(new SwipeDetector(transferHolder, pos));
+            return v;
+        }
+
+        public class SwipeDetector implements View.OnTouchListener {
+            private static final int MIN_DISTANCE = 300;
+            private static final int MIN_LOCK_DICTANCE = 30;
+            private boolean motionInterceptDisallowed = false;
+            private float downX, upX;
+            private TransferViewHolder holder;
+            private int position;
+
+            public SwipeDetector(TransferViewHolder holder, int position) {
+                this.holder = holder;
+                this.position = position;
+            }
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        Log.d(TAG, "onTouch ACTION_DOWN");
+                        downX = event.getX();
+                        Log.d(TAG, "onTouch ACTION_DOWN position " + position);
+                        return true;
+                    }
+                    case MotionEvent.ACTION_MOVE: {
+                        Log.d(TAG, "onTouch ACTION_MOVE");
+                        upX = event.getX();
+                        float deltaX = downX - upX;
+                        if (Math.abs(deltaX) > MIN_LOCK_DICTANCE && mListView != null && !motionInterceptDisallowed) {
+                            mListView.requestDisallowInterceptTouchEvent(true);
+                            motionInterceptDisallowed = true;
+                        }
+                        if (deltaX > 0) {
+                            holder.listItem.setVisibility(View.GONE);
+                        } else {
+                            holder.listItem.setVisibility(View.VISIBLE);
+                        }
+                        swipe(-(int) deltaX);
+                        return true;
+                    }
+                    case MotionEvent.ACTION_UP:
+                        Log.d(TAG, "onTouch ACTION_UP");
+                        upX = event.getX();
+                        float deltaX = upX - downX;
+                        if (deltaX > MIN_DISTANCE) {
+                            // left or right
+                            swipeRemove();
+                        } else {
+                            swipe(0);
+                        }
+
+                        if (mListView != null) {
+                            mListView.requestDisallowInterceptTouchEvent(false);
+                            motionInterceptDisallowed = false;
+                        }
+
+                        holder.listItem.setVisibility(View.VISIBLE);
+                        return true;
+
+                    case MotionEvent.ACTION_CANCEL:
+                        Log.d(TAG, "onTouch ACTION_CANCEL");
+                        swipe(0);
+                        holder.listItem.setVisibility(View.VISIBLE);
+                        return false;
+                }
+                return true;
+
+            }
+
+            private void swipe(int distance) {
+                View animationView = holder.mainView;
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) animationView.getLayoutParams();
+                params.rightMargin = -distance;
+                params.leftMargin = distance;
+                animationView.setLayoutParams(params);
+            }
+
+            private void swipeRemove() {
+                remove(getItem(position));
+                //deleteJsonObject(position);
+                notifyDataSetChanged();
+            }
+        }
+    }
 }
