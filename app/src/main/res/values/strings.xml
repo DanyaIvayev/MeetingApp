@@ -20,5 +20,6 @@
     <string name="loginText">Введите логин и пароль для доступа к серверу</string>
     <string name="loginSummary">Вход не произведен</string>
     <string name="workInternet">Отсутствует интернет соединение</string>
+    <string name="missAccount">Необходимо ввести логин и пароль от сервера. Зайдите в Меню -> Настройки-> Войдите в систему</string>
     <string name="pref_category">Настройки Аккаунта</string>
 </resources>

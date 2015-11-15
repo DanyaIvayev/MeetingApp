@@ -44,10 +44,12 @@ public class MainActivity extends ActionBarActivity {
     private static final String TAG = "MainActivity";
     private View userDialog;
     private JSONObject res;
-    public static final String APP_PREFERENCES = "mysettings";
+    public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
     public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
     private SharedPreferences preferences;
+    private String username;
+    private String password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,18 +59,25 @@ public class MainActivity extends ActionBarActivity {
         ab.setDisplayShowHomeEnabled(true);
         ab.setIcon(R.drawable.ic_launcher);
         getOverflowMenu();
+
+
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
         boolean isOnline = isOnline();
-        //if (isOnline)
-            //showLoginDialog();
-        //else
         if(!isOnline)
-            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_LONG).show();
-//        preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-//        if(preferences!=null){
-//            if(preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)){
-//
-//            }
-//        }
+            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+        preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+        if(preferences!=null){
+            if(preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)){
+                username = preferences.getString(APP_PREFERENCES_NAME, "");
+                password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
+            } else {
+                Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     @Override
@@ -227,5 +236,6 @@ public class MainActivity extends ActionBarActivity {
    private void printRes(){
        Log.d(TAG, "printRes response = "+ res.toString());
    }
+
 
 }
