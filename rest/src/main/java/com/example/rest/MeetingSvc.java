@@ -18,7 +18,9 @@ import com.sun.jersey.api.view.Viewable;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 @Path("/meeting")
 public class MeetingSvc {
@@ -37,10 +39,12 @@ public class MeetingSvc {
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
     public String getMeeting(@QueryParam("username") String username,
                              @QueryParam("password") String password) {
-        if(this.username.equals(username)&& this.password.equals(password))
-            return meetings.toString();
+        if(this.username.equals(username)&& this.password.equals(password)){
+            ArrayList<Meeting> currentMeetings = findMeetingsForDate();
+            return currentMeetings.toString();
+        }
         else
-            return "{\"response\":\"false\"}";
+            return "[\"response\":\"false\"]";
 
     }
 
@@ -50,17 +54,21 @@ public class MeetingSvc {
                                @QueryParam("description") String description,
                                @QueryParam("begindate") String begindate,
                                @QueryParam("enddate") String enddate,
-                               @QueryParam("priority") String prioty
+                               @QueryParam("priority") String priority
     ) {
-        addMeeting(name, description, begindate, enddate, prioty);
+        addMeeting(name, description, begindate, enddate, priority);
         return meetings.toString();
     }
 
-//    @POST
-//    @Path("/mobileSetMeeting")
-//    public void setMeetings(String data){
-//        addMeeting(data);
-//    }
+    @POST
+    @Path("/mobileSetMeeting")
+    public void setMeetings(@QueryParam("name") String name,
+                            @QueryParam("description") String description,
+                            @QueryParam("begindate") String begindate,
+                            @QueryParam("enddate") String enddate,
+                            @QueryParam("priority") String priority){
+        addMeeting(name, description, begindate, enddate, priority);
+    }
 
     @POST
     @Path("/getDescription")
@@ -145,6 +153,19 @@ public class MeetingSvc {
         }
         return meeting;
     }
+
+    private ArrayList<Meeting> findMeetingsForDate(){
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = format.format(date);
+        ArrayList<Meeting> currentMeetings = new ArrayList<Meeting>();
+        for(Meeting m : meetings){
+            if(m.getBeginData().equals(currentDate)){
+                currentMeetings.add(m);
+            }
+        }
+        return currentMeetings;
+    }
     @POST
     @Path("/getMeetOnDes")
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
@@ -162,11 +183,13 @@ public class MeetingSvc {
             return null;
     }
 
+
+
     private void addMeeting(String name,
                             String description,
                             String begindate,
                             String enddate,
-                            String prioty) {
+                            String priority) {
         Meeting meeting = null;
         try {
             //String decodedValue1 = URLDecoder.decode(data, "UTF-8");
@@ -176,11 +199,11 @@ public class MeetingSvc {
             meeting.setDescription(URLDecoder.decode(description, "UTF-8"));
             meeting.setBeginData(URLDecoder.decode(begindate, "UTF-8"));
             meeting.setEndData(URLDecoder.decode(enddate, "UTF-8"));
-            String priority = URLDecoder.decode(prioty, "UTF-8");
-            if(priority.endsWith("\r\n"))
-                priority = priority.substring(0, priority.length()-2);
+            String prior = URLDecoder.decode(priority, "UTF-8");
+            if(prior.endsWith("\r\n"))
+                prior = prior.substring(0, prior.length()-2);
             Meeting.Priority p = meeting.getPriority();
-            switch (priority) {
+            switch (prior) {
                 case "Срочная": {
                     p = Meeting.Priority.URGENT;
                 }

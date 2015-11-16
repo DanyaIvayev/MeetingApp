@@ -2,14 +2,18 @@ package com.example.meetingapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.IntentService;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -38,22 +42,30 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements DownloadResultReceiver.Receiver {
     private static final String TAG = "MainActivity";
     private JSONObject res;
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
     public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
+    public static final String APP_RECEIVER="receiver";
+    final int TASK1_CODE = 1;
     private SharedPreferences preferences;
     String username;
     String password;
     ListView mListView;
+    DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
+    JSONArray array=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +74,9 @@ public class MainActivity extends ActionBarActivity {
         ActionBar ab = getSupportActionBar();
         ab.setDisplayShowHomeEnabled(true);
         ab.setIcon(R.drawable.ic_launcher);
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = format.format(date);
         getOverflowMenu();
     }
 
@@ -78,14 +93,44 @@ public class MainActivity extends ActionBarActivity {
                 if(!isOnline)
                     Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
                 else{
+                    mReceiver = new DownloadResultReceiver(new Handler());
+                    mReceiver.setReceiver(this);
                     Intent i = new Intent(this, RestClientService.class);
                     i.putExtra(APP_PREFERENCES_NAME, username);
                     i.putExtra(APP_PREFERENCES_PASSWORD, password);
+                    i.putExtra(APP_RECEIVER, mReceiver);
                     this.startService(i);
                 }
             } else {
                 Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
             }
+        }
+    }
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        switch (resultCode) {
+//            case DownloadService.STATUS_RUNNING:
+//                setProgressBarIndeterminateVisibility(true);
+//                break;
+            case RestClientService.STATUS_FINISHED:
+                /* Hide progress & extract result from bundle */
+                try {
+                    setProgressBarIndeterminateVisibility(false);
+                    String result = resultData.getString("result");
+                    array = new JSONArray(result);
+                    fillListView();
+                } catch (JSONException e){
+                    Log.e(TAG, "onReceiveResult "+e.getMessage());
+                }
+                /* Update ListView with result */
+                /*arrayAdapter = new ArrayAdapter(MyActivity.this, android.R.layout.simple_list_item_2, results);
+                listView.setAdapter(arrayAdapter);*/
+                break;
+            case RestClientService.STATUS_ERROR:
+                /* Handle the error */
+                String error = resultData.getString(Intent.EXTRA_TEXT);
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                break;
         }
     }
 
@@ -123,7 +168,25 @@ public class MainActivity extends ActionBarActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+    private void fillListView(){
+        if(array!=null) {
+            try {
+                mListView = (ListView) findViewById(R.id.meetingList);
+                mListView.setAdapter(null);
+                ArrayList<TransferItem> transferList = new ArrayList<TransferItem>();
 
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject item = array.getJSONObject(i);
+                    transferList.add(new TransferItem(item.getString(getString(R.string.jsonMeetingName)),
+                            item.getString(getString(R.string.jsonBeginDate)),
+                            item.getString(getString(R.string.jsonEndDate))));
+                }
+                mListView.setAdapter(new TransferAdapter(this, R.layout.list_item, transferList));
+            } catch (JSONException e){
+                Log.e(TAG, "fillListView "+e.getMessage());
+            }
+        }
+    }
     private void showAlert() {
 
         new AlertDialog.Builder(this).setIconAttribute(android.R.attr.alertDialogIcon)

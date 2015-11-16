@@ -2,6 +2,8 @@ package com.example.meetingapp;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.ResultReceiver;
 import android.util.Log;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -24,7 +26,9 @@ public class RestClientService extends IntentService {
     private static final String TAG = "RestClientService";
     public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
-
+    public static final String APP_RECEIVER="receiver";
+    public static final int STATUS_FINISHED = 1;
+    public static final int STATUS_ERROR = 2;
     public RestClientService() {
         super("RestClientService");
     }
@@ -34,7 +38,9 @@ public class RestClientService extends IntentService {
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String username = i.getStringExtra(APP_PREFERENCES_NAME);
         String password = i.getStringExtra(APP_PREFERENCES_PASSWORD);
+        final ResultReceiver receiver = i.getParcelableExtra(APP_RECEIVER);
         String url = getString(R.string.urlGetMeeting);
+
         url += "?username=" + username + "&password=" + password;
 //        String url = "+http://192.168.43.246:8080/rest/rest/meeting/getMeeting";
         JsonArrayRequest request =
@@ -42,12 +48,20 @@ public class RestClientService extends IntentService {
                         new Response.Listener<JSONArray>() {
                             @Override
                             public void onResponse(JSONArray response) {
-                                try {
-                                    JSONArray array = new JSONArray(response.toString());
-                                    Log.d(TAG, "onResponse "+response.toString());
-                                } catch (JSONException je) {
-                                    Log.e(TAG, "onResponse " + je.getMessage());
-                                }
+//                                try {
+                                    Bundle bundle = new Bundle();
+                                    JSONArray array = response;
+                                    if(response.toString().equals(getString(R.string.unauthorized))){
+                                        bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно");
+                                        receiver.send(STATUS_ERROR, bundle);
+                                    } else {
+                                        bundle.putString("result", response.toString());
+                                        receiver.send(STATUS_FINISHED, bundle);
+                                    }
+                                Log.d(TAG, "onResponse "+response.toString());
+//                                } catch (JSONException je) {
+//                                    Log.e(TAG, "onResponse " + je.getMessage());
+//                                }
                             }
                         },
                         new Response.ErrorListener() {
