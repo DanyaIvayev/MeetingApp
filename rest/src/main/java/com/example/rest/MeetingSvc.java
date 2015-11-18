@@ -16,11 +16,15 @@ import com.example.meeting.Meeting;
 import com.example.participant.Participant;
 import com.sun.jersey.api.view.Viewable;
 
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import javax.ws.rs.HeaderParam;
 
 @Path("/meeting")
 public class MeetingSvc {
@@ -33,7 +37,11 @@ public class MeetingSvc {
     public static ArrayList<Meeting> meetings = new ArrayList<>();
     private String username = "user";
     private String password = "password";
-
+    public static final String APP_MEETING_NAME="name";     // название встречи
+    public static final String APP_BEGIN_DATE="begindate";  //дата начала
+    public static final String APP_END_DATE="enddate";      //дата конца
+    public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
+    public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     @GET
     @Path("/getMeeting")
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
@@ -44,7 +52,7 @@ public class MeetingSvc {
             return currentMeetings.toString();
         }
         else
-            return "[\"response\":\"false\"]";
+            return "[{\"response\":\"false\"}]";
 
     }
 
@@ -66,7 +74,9 @@ public class MeetingSvc {
                             @QueryParam("description") String description,
                             @QueryParam("begindate") String begindate,
                             @QueryParam("enddate") String enddate,
-                            @QueryParam("priority") String priority){
+                            @QueryParam("priority") String priority,
+                            @QueryParam("username") String username,
+                            @QueryParam("password") String password){
         addMeeting(name, description, begindate, enddate, priority);
     }
 
@@ -124,22 +134,62 @@ public class MeetingSvc {
         }
     }
 
+
+   // @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
+
     @DELETE
     @Path("/deleteMeeting")
-    public void deleteMeeting(String data) {
+    @Produces(MediaType.TEXT_PLAIN + ";charset=UTF-8")
+    public void deleteMeeting(@HeaderParam("data") String data){
+//                              @PathParam("begindate") String begindate,
+//                                    @PathParam("enddate") String enddate,
+//                                    @PathParam("username") String username,
+//                                    @PathParam("password") String password){
+        String decoded ="";
+        String name = request.getHeader("data");
         try {
-            String decodedValue1 = URLDecoder.decode(data, "UTF-8");
-            String[] splitStr = decodedValue1.split("[=&]");
-            String name = splitStr[1];
-            String begindate = splitStr[3];
-            String enddate = splitStr[5].substring(0, splitStr[5].length()-2);
-            Meeting m = findMeeting(name, begindate, enddate);
-            if (m != null) {
-                meetings.remove(m);
+            byte[] utf8 = data.getBytes("UTF-8");
+            decoded = new String(utf8);
+       // if(this.username.equals(username)&& this.password.equals(password)) {
+
+                //String parse = URLDecoder.decode(data, "UTF-8");
+                //String[] splitStr = parse.split("[=&]");
+                String n = URLDecoder.decode(data, "UTF-8");
+//                begindate = URLDecoder.decode(begindate, "UTF-8");
+//                enddate = URLDecoder.decode(enddate, "UTF-8");
+//                username = URLDecoder.decode(username, "UTF-8");
+//                password = URLDecoder.decode(password, "UTF-8");
+//                if(this.username.equals(username)&& this.password.equals(password)) {
+//                    Meeting m = findMeeting(name, begindate, enddate);
+//                    if (m != null) {
+//                        meetings.remove(m);
+//                        result = "[{\"response\":\"true\"}]";
+//                    }
+//                }
+                throw new Exception(name +";"+ decoded+ ";"+data);
+//                JSONObject obj = array.getJSONObject(0);
+//                String name = obj.getString(APP_MEETING_NAME);
+//                String begindate = obj.getString(APP_BEGIN_DATE);
+//                String enddate = obj.getString(APP_END_DATE);
+//                String username = obj.getString(APP_PREFERENCES_NAME);
+//                String password = obj.getString(APP_PREFERENCES_PASSWORD);
+//                if(this.username.equals(username)&& this.password.equals(password)) {
+//                    String n = URLDecoder.decode(name, "UTF-8");
+//                    String b = URLDecoder.decode(begindate, "UTF-8");
+//                    String e = URLDecoder.decode(enddate, "UTF-8");
+//                    Meeting m = findMeeting(n, b, e);
+//                    if (m != null) {
+//                        meetings.remove(m);
+//                        result = "[{\"response\":\"true\"}]";
+//                    }
+//                }
+            } catch (UnsupportedEncodingException uee) {
+                uee.printStackTrace();
+            } catch(Exception e){
+                System.out.println(e.getMessage());
+            } finally {
+                //return result;
             }
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace();
-        }
     }
 
 
@@ -148,7 +198,6 @@ public class MeetingSvc {
         for (Meeting m : meetings) {
             if (m.getName().equals(name) && m.getBeginData().equals(begindate) && m.getEndData().equals(enddate)) {
                 meeting = m;
-                return m;
             }
         }
         return meeting;

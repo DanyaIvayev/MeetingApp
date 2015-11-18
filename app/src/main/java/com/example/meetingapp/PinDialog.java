@@ -17,8 +17,8 @@ import android.widget.EditText;
 public class PinDialog extends DialogPreference {
     private EditText username;
     private EditText password;
-    public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
-    public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
+    public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
+    public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     private final String DEFAULT_VALUE = "Вход не произведен";
     private int selectedValue;
 

@@ -55,13 +55,21 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     private static final String TAG = "MainActivity";
     private JSONObject res;
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
-    public static final String APP_PREFERENCES_NAME = "userName"; // имя пользователя
-    public static final String APP_PREFERENCES_PASSWORD = "passwordKey"; // пароль
-    public static final String APP_RECEIVER="receiver";
-    final int TASK1_CODE = 1;
+    public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
+    public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
+    public static final String APP_RECEIVER="receiver";     // ресивер
+    public static final String APP_CODE_TASK="codeTask";    // код задачи
+    public static final String APP_MEETING_NAME="name";     // название встречи
+    public static final String APP_BEGIN_DATE="begindate";  //дата начала
+    public static final String APP_END_DATE="enddate";      //дата конца
+    final int TASK1_RECEIVE_MEETINGS = 1;
+    final int TASK2_DELETE_MEETING=2;
     private SharedPreferences preferences;
     String username;
     String password;
+    String swipeMeetingName;
+    String swipeBeginDate;
+    String swipeEndDate;
     ListView mListView;
     DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
@@ -93,13 +101,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 if(!isOnline)
                     Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
                 else{
-                    mReceiver = new DownloadResultReceiver(new Handler());
-                    mReceiver.setReceiver(this);
-                    Intent i = new Intent(this, RestClientService.class);
-                    i.putExtra(APP_PREFERENCES_NAME, username);
-                    i.putExtra(APP_PREFERENCES_PASSWORD, password);
-                    i.putExtra(APP_RECEIVER, mReceiver);
-                    this.startService(i);
+                    startSendService(TASK1_RECEIVE_MEETINGS);
                 }
             } else {
                 Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
@@ -108,29 +110,37 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     }
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
-        switch (resultCode) {
-//            case DownloadService.STATUS_RUNNING:
-//                setProgressBarIndeterminateVisibility(true);
-//                break;
-            case RestClientService.STATUS_FINISHED:
+        int taskCode = resultData.getInt(APP_CODE_TASK);
+        switch (taskCode) {
+            case TASK1_RECEIVE_MEETINGS: {
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED:
                 /* Hide progress & extract result from bundle */
-                try {
-                    setProgressBarIndeterminateVisibility(false);
-                    String result = resultData.getString("result");
-                    array = new JSONArray(result);
-                    fillListView();
-                } catch (JSONException e){
-                    Log.e(TAG, "onReceiveResult "+e.getMessage());
+                        try {
+                            setProgressBarIndeterminateVisibility(false);
+                            String result = resultData.getString("result");
+                            array = new JSONArray(result);
+                            fillListView();
+                        } catch (JSONException e) {
+                            Log.e(TAG, "onReceiveResult " + e.getMessage());
+                        }
+                        break;
+                    case RestClientService.STATUS_ERROR:
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                        break;
                 }
-                /* Update ListView with result */
-                /*arrayAdapter = new ArrayAdapter(MyActivity.this, android.R.layout.simple_list_item_2, results);
-                listView.setAdapter(arrayAdapter);*/
-                break;
-            case RestClientService.STATUS_ERROR:
-                /* Handle the error */
-                String error = resultData.getString(Intent.EXTRA_TEXT);
-                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
-                break;
+            } break;
+            case TASK2_DELETE_MEETING:{
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED:
+                        Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
+                    case RestClientService.STATUS_ERROR:
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
         }
     }
 
@@ -196,8 +206,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
-                        //Stop the activity
                         finish();
                     }
 
@@ -244,70 +252,31 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         }
     }
 
-    private void showLoginDialog() {
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View userDialog = inflater.inflate(R.layout.dialog_text, null);
-        new AlertDialog.Builder(this)
-                .setCancelable(false)
-                .setIcon(R.drawable.password_dialog)
-                .setTitle(R.string.loginTitle)
-                .setMessage(R.string.loginText)
-                .setView(userDialog)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+    private void startSendService(int code){
+        mReceiver = new DownloadResultReceiver(new Handler());
+        mReceiver.setReceiver(this);
+        Intent i = new Intent(this, RestClientService.class);
+        switch(code){
+            case TASK2_DELETE_MEETING:{
+                i.putExtra(APP_MEETING_NAME, swipeMeetingName);
+                i.putExtra(APP_BEGIN_DATE, swipeBeginDate);
+                i.putExtra(APP_END_DATE, swipeEndDate);
+            }
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        EditText user = (EditText)userDialog.findViewById(R.id.userText);
-                        EditText password = (EditText) userDialog.findViewById(R.id.passwordText);
-                        checkLoginRequest(user.getText().toString(), password.getText().toString());
-                        dialog.cancel();
-                        Log.d(TAG, "onCreate response = " + res);
-                    }
-
-                }).show();
+        }
+        i.putExtra(APP_PREFERENCES_NAME, username);
+        i.putExtra(APP_PREFERENCES_PASSWORD, password);
+        i.putExtra(APP_CODE_TASK, code);
+        i.putExtra(APP_RECEIVER, mReceiver);
+        this.startService(i);
     }
 
-    public boolean isOnline() {
+    private boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         return cm.getActiveNetworkInfo() != null &&
                 cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-    private void checkLoginRequest(String username, String password) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://192.168.43.246:8080/rest/rest/hello/user?userName=" + username + "&password=" + password;
-        final ProgressDialog dlg = ProgressDialog.show(
-                this,
-                "Retrieving REST data",
-                "Please Wait...", true);
-
-        JsonObjectRequest request =
-                new JsonObjectRequest(Request.Method.GET, url, null,
-                        new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                dlg.dismiss();
-                                res = response;
-                                printRes();
-
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.e(TAG, "onErrorResponse Request failed: " + error.toString());
-                                dlg.dismiss();
-                            }
-
-                        });
-        request.setRetryPolicy(
-                new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
-        queue.add(request);
-}
-   private void printRes(){
-       Log.d(TAG, "printRes response = "+ res.toString());
-   }
 
     class TransferItem{
         private String meetingName;
@@ -366,7 +335,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             View v = convertView;
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
-                //v = vi.inflate(R.layout.feed_view, null);
                 v = vi.inflate(R.layout.list_item, null);
                 transferHolder = new TransferViewHolder();
                 transferHolder.mainView = (LinearLayout) v.findViewById(R.id.mainview);
@@ -469,8 +437,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             }
 
             private void swipeRemove() {
-                remove(getItem(position));
-                //deleteJsonObject(position);
+                TransferItem ti = getItem(position);
+                swipeMeetingName = ti.getMeetingName();
+                swipeBeginDate = ti.getBeginDate();
+                swipeEndDate = ti.getEndDate();
+                remove(ti);
+                startSendService(TASK2_DELETE_MEETING);
                 notifyDataSetChanged();
             }
         }
