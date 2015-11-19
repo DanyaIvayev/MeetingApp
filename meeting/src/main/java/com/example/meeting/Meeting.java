@@ -10,13 +10,22 @@ import java.util.List;
  */
 public class Meeting {
     public enum Priority {URGENT, ROUTINE, POSSIBLE}
-
+    private static int codeId=0;
+    private int id;
     private String name;
     private String description;
     private String beginData;
     private String endData;
     private ArrayList<Participant> participants;
     Priority priority = Priority.URGENT;
+
+    public Meeting() {
+        id = ++codeId;
+    }
+
+    public int getId() {
+        return id;
+    }
 
     public String getName() {
         return name;
@@ -77,7 +86,8 @@ public class Meeting {
 
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer("{" + "\"name\":");
+        StringBuffer result = new StringBuffer("{" +"\"id\":\""+id+"\", "
+                + "\"name\":");
         result.append("\"" + name + "\"").append(", \"description\":").append("\"" + description + "\"")
                 .append(", \"beginData\":" + "\"" + beginData + "\"" +
                         ", \"endData\":" + "\"" + endData + "\"");

@@ -62,6 +62,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     public static final String APP_MEETING_NAME="name";     // название встречи
     public static final String APP_BEGIN_DATE="begindate";  //дата начала
     public static final String APP_END_DATE="enddate";      //дата конца
+    public static final String APP_ID="id";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING=2;
     private SharedPreferences preferences;
@@ -70,6 +71,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     String swipeMeetingName;
     String swipeBeginDate;
     String swipeEndDate;
+    int swipeID;
     ListView mListView;
     DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
@@ -187,7 +189,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject item = array.getJSONObject(i);
-                    transferList.add(new TransferItem(item.getString(getString(R.string.jsonMeetingName)),
+                    transferList.add(new TransferItem(
+                            item.getInt(getString(R.string.jsonId)),
+                            item.getString(getString(R.string.jsonMeetingName)),
                             item.getString(getString(R.string.jsonBeginDate)),
                             item.getString(getString(R.string.jsonEndDate))));
                 }
@@ -258,9 +262,10 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         Intent i = new Intent(this, RestClientService.class);
         switch(code){
             case TASK2_DELETE_MEETING:{
-                i.putExtra(APP_MEETING_NAME, swipeMeetingName);
-                i.putExtra(APP_BEGIN_DATE, swipeBeginDate);
-                i.putExtra(APP_END_DATE, swipeEndDate);
+                  i.putExtra(APP_ID,swipeID);
+//                i.putExtra(APP_MEETING_NAME, swipeMeetingName);
+//                i.putExtra(APP_BEGIN_DATE, swipeBeginDate);
+//                i.putExtra(APP_END_DATE, swipeEndDate);
             }
 
         }
@@ -279,13 +284,23 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
 
     class TransferItem{
+        private int id;
         private String meetingName;
         private String beginDate;
         private String endDate;
-        public TransferItem(String meetingName, String beginDate, String endDate) {
+        public TransferItem(int id, String meetingName, String beginDate, String endDate) {
+            this.id = id;
             this.meetingName = meetingName;
             this.beginDate = beginDate;
             this.endDate = endDate;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
         }
 
         public String getBeginDate() {
@@ -438,6 +453,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
             private void swipeRemove() {
                 TransferItem ti = getItem(position);
+                swipeID = ti.getId();
                 swipeMeetingName = ti.getMeetingName();
                 swipeBeginDate = ti.getBeginDate();
                 swipeEndDate = ti.getEndDate();

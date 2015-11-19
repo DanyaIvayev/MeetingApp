@@ -42,6 +42,7 @@ public class MeetingSvc {
     public static final String APP_END_DATE="enddate";      //дата конца
     public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
+    public static final String APP_ID="id";
     @GET
     @Path("/getMeeting")
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
@@ -139,40 +140,29 @@ public class MeetingSvc {
 
     @DELETE
     @Path("/deleteMeeting")
-    @Produces(MediaType.TEXT_PLAIN + ";charset=UTF-8")
-    public void deleteMeeting(@HeaderParam("data") String data){
+    //@Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void deleteMeeting(){
 //                              @PathParam("begindate") String begindate,
 //                                    @PathParam("enddate") String enddate,
 //                                    @PathParam("username") String username,
 //                                    @PathParam("password") String password){
-        String decoded ="";
-        String name = request.getHeader("data");
+            int id = Integer.parseInt((request.getHeader(APP_ID)));
+//        String name = request.getHeader(APP_MEETING_NAME);
+//        String begindate = request.getHeader(APP_BEGIN_DATE);
+//        String enddate = request.getHeader(APP_END_DATE);
+//        String username = request.getHeader(APP_PREFERENCES_NAME);
+//        String password = request.getHeader(APP_PREFERENCES_PASSWORD);
         try {
-            byte[] utf8 = data.getBytes("UTF-8");
-            decoded = new String(utf8);
-       // if(this.username.equals(username)&& this.password.equals(password)) {
 
-                //String parse = URLDecoder.decode(data, "UTF-8");
-                //String[] splitStr = parse.split("[=&]");
-                String n = URLDecoder.decode(data, "UTF-8");
-//                begindate = URLDecoder.decode(begindate, "UTF-8");
-//                enddate = URLDecoder.decode(enddate, "UTF-8");
-//                username = URLDecoder.decode(username, "UTF-8");
-//                password = URLDecoder.decode(password, "UTF-8");
-//                if(this.username.equals(username)&& this.password.equals(password)) {
-//                    Meeting m = findMeeting(name, begindate, enddate);
-//                    if (m != null) {
-//                        meetings.remove(m);
-//                        result = "[{\"response\":\"true\"}]";
-//                    }
-//                }
-                throw new Exception(name +";"+ decoded+ ";"+data);
-//                JSONObject obj = array.getJSONObject(0);
-//                String name = obj.getString(APP_MEETING_NAME);
-//                String begindate = obj.getString(APP_BEGIN_DATE);
-//                String enddate = obj.getString(APP_END_DATE);
-//                String username = obj.getString(APP_PREFERENCES_NAME);
-//                String password = obj.getString(APP_PREFERENCES_PASSWORD);
+            if(this.username.equals(username)&& this.password.equals(password)) {
+                Meeting m = findMeeting(id);
+                //Meeting m = findMeeting(name, begindate, enddate);
+                if (m != null) {
+                    meetings.remove(m);
+                }
+            }
+            throw new Exception(";"+id+";");
 //                if(this.username.equals(username)&& this.password.equals(password)) {
 //                    String n = URLDecoder.decode(name, "UTF-8");
 //                    String b = URLDecoder.decode(begindate, "UTF-8");
@@ -183,8 +173,6 @@ public class MeetingSvc {
 //                        result = "[{\"response\":\"true\"}]";
 //                    }
 //                }
-            } catch (UnsupportedEncodingException uee) {
-                uee.printStackTrace();
             } catch(Exception e){
                 System.out.println(e.getMessage());
             } finally {
@@ -202,7 +190,15 @@ public class MeetingSvc {
         }
         return meeting;
     }
-
+    private Meeting findMeeting(int id) {
+        Meeting meeting = null;
+        for (Meeting m : meetings) {
+            if (m.getId()==id) {
+                meeting = m;
+            }
+        }
+        return meeting;
+    }
     private ArrayList<Meeting> findMeetingsForDate(){
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");

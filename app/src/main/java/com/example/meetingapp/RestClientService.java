@@ -37,6 +37,7 @@ public class RestClientService extends IntentService {
     public static final String APP_MEETING_NAME="name";     // название встречи
     public static final String APP_BEGIN_DATE="begindate";  //дата начала
     public static final String APP_END_DATE="enddate";      //дата конца
+    public static final String APP_ID="id";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING=2;
     public static final int STATUS_FINISHED = 1;
@@ -101,17 +102,23 @@ public class RestClientService extends IntentService {
     private void deleteMeetingRequest(final ResultReceiver receiver, Intent i){
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         url = getString(R.string.urlDeleteMeeting);
-        final String mName = i.getStringExtra(APP_MEETING_NAME);
-        String begindate = i.getStringExtra(APP_BEGIN_DATE);
-        String enddate = i.getStringExtra(APP_END_DATE);
-        password = i.getStringExtra(APP_PREFERENCES_PASSWORD);
+        final int id = i.getIntExtra(APP_ID, -1);
+//        final String begindate = i.getStringExtra(APP_BEGIN_DATE);
+//        final String enddate = i.getStringExtra(APP_END_DATE);
+      //  password = i.getStringExtra(APP_PREFERENCES_PASSWORD);
+        try{
+        JSONObject obj = new JSONObject();
+        obj.put(APP_ID, id);
+        final JSONArray array = new JSONArray();
+            array.put(obj);
         //url += "?data="+mName;
         //       + password;
-             StringRequest request =
-                    new StringRequest(Request.Method.DELETE, url,// null,
-                            new Response.Listener<String>(){
+
+        JsonArrayRequest request =
+                    new JsonArrayRequest(Request.Method.DELETE, url, array,
+                            new Response.Listener<JSONArray>(){
                                 @Override
-                                public void onResponse(String response) {
+                                public void onResponse(JSONArray response) {
                                     Bundle bundle = new Bundle();
 //                                    if(response.toString().equals("[{\"response\":\"false\"}]")){
 //                                        bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно, либо ошибка на сервере");
@@ -138,7 +145,13 @@ public class RestClientService extends IntentService {
                             HashMap<String, String> headers = new HashMap<String, String>();
                             headers.put("Content-Type", "application/json");
                             headers.put("Accept-Charset", "UTF-8");
-                            headers.put("data", mName);
+//                            headers.put(APP_MEETING_NAME, mName);
+//                            headers.put(APP_BEGIN_DATE, begindate);
+//                            headers.put(APP_END_DATE, enddate);
+                            headers.put(APP_ID, String.valueOf(id));
+                            headers.put(APP_PREFERENCES_NAME, username);
+                            headers.put(APP_PREFERENCES_PASSWORD, password);
+
                             return headers;
                         }
                     };
@@ -146,9 +159,9 @@ public class RestClientService extends IntentService {
                     new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
 
             queue.add(request);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
