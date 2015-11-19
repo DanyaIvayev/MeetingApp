@@ -28,8 +28,8 @@
     <string name="meetingTextView">meetingName</string>
     <string name="beginDateText">beginDate</string>
     <string name="endDateText">endDate</string>
-    <string name="urlGetMeeting">http://192.168.1.100:8080/rest/rest/meeting/getMeeting</string>
-    <string name="urlDeleteMeeting">http://192.168.1.100:8080/rest/rest/meeting/deleteMeeting</string>
+    <string name="urlGetMeeting">http://192.168.0.83:8080/rest/rest/meeting/getMeeting</string>
+    <string name="urlDeleteMeeting">http://192.168.0.83:8080/rest/rest/meeting/deleteMeeting</string>
     <string name="unauthorized">[{\"response\":\"false\"}]</string>
     <string name="jsonMeetingName">name</string>
     <string name="jsonBeginDate">beginData</string>

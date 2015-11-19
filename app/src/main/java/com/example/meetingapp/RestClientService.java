@@ -103,32 +103,21 @@ public class RestClientService extends IntentService {
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         url = getString(R.string.urlDeleteMeeting);
         final int id = i.getIntExtra(APP_ID, -1);
-//        final String begindate = i.getStringExtra(APP_BEGIN_DATE);
-//        final String enddate = i.getStringExtra(APP_END_DATE);
-      //  password = i.getStringExtra(APP_PREFERENCES_PASSWORD);
         try{
-        JSONObject obj = new JSONObject();
-        obj.put(APP_ID, id);
-        final JSONArray array = new JSONArray();
-            array.put(obj);
-        //url += "?data="+mName;
-        //       + password;
-
         JsonArrayRequest request =
-                    new JsonArrayRequest(Request.Method.DELETE, url, array,
+                    new JsonArrayRequest(Request.Method.DELETE, url, null,
                             new Response.Listener<JSONArray>(){
                                 @Override
                                 public void onResponse(JSONArray response) {
                                     Bundle bundle = new Bundle();
-//                                    if(response.toString().equals("[{\"response\":\"false\"}]")){
-//                                        bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно, либо ошибка на сервере");
-//                                        bundle.putInt(APP_CODE_TASK, TASK2_DELETE_MEETING);
-//                                        receiver.send(STATUS_ERROR, bundle);
-//                                    } else {
-//                                        //bundle.putString("result", response.toString());
-//                                        bundle.putInt(APP_CODE_TASK, TASK2_DELETE_MEETING);
-//                                        receiver.send(STATUS_FINISHED, bundle);
-//                                    }
+                                    if(response.toString().equals("[{\"response\":\"false\"}]")){
+                                        bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно, либо ошибка на сервере");
+                                        bundle.putInt(APP_CODE_TASK, TASK2_DELETE_MEETING);
+                                        receiver.send(STATUS_ERROR, bundle);
+                                    } else {
+                                        bundle.putInt(APP_CODE_TASK, TASK2_DELETE_MEETING);
+                                        receiver.send(STATUS_FINISHED, bundle);
+                                    }
                                     Log.d(TAG, "onResponse "+response.toString());
                                 }
                             },
@@ -139,30 +128,22 @@ public class RestClientService extends IntentService {
                                 }
                             })
                     {
-
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {
                             HashMap<String, String> headers = new HashMap<String, String>();
                             headers.put("Content-Type", "application/json");
                             headers.put("Accept-Charset", "UTF-8");
-//                            headers.put(APP_MEETING_NAME, mName);
-//                            headers.put(APP_BEGIN_DATE, begindate);
-//                            headers.put(APP_END_DATE, enddate);
                             headers.put(APP_ID, String.valueOf(id));
                             headers.put(APP_PREFERENCES_NAME, username);
                             headers.put(APP_PREFERENCES_PASSWORD, password);
-
                             return headers;
                         }
                     };
             request.setRetryPolicy(
                     new DefaultRetryPolicy(20 * 1000, 1, 1.0f));
-
             queue.add(request);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 }

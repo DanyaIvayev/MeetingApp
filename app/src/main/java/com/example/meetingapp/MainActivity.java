@@ -2,17 +2,14 @@ package com.example.meetingapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.IntentService;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -27,31 +24,21 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import android.support.v4.widget.SwipeRefreshLayout;
 
-public class MainActivity extends ActionBarActivity implements DownloadResultReceiver.Receiver {
+public class MainActivity extends ActionBarActivity implements DownloadResultReceiver.Receiver, SwipeRefreshLayout.OnRefreshListener{
     private static final String TAG = "MainActivity";
     private JSONObject res;
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
@@ -59,9 +46,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     public static final String APP_RECEIVER="receiver";     // ресивер
     public static final String APP_CODE_TASK="codeTask";    // код задачи
-    public static final String APP_MEETING_NAME="name";     // название встречи
-    public static final String APP_BEGIN_DATE="begindate";  //дата начала
-    public static final String APP_END_DATE="enddate";      //дата конца
+//    public static final String APP_MEETING_NAME="name";     // название встречи
+//    public static final String APP_BEGIN_DATE="begindate";  //дата начала
+//    public static final String APP_END_DATE="enddate";      //дата конца
     public static final String APP_ID="id";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING=2;
@@ -76,7 +63,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
     JSONArray array=null;
-
+    private TransferAdapter adapter;
+    ArrayList<TransferItem> transferList;
+    private SwipeRefreshLayout swipeRefreshLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +76,8 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String currentDate = format.format(date);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
         getOverflowMenu();
     }
 
@@ -184,8 +175,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         if(array!=null) {
             try {
                 mListView = (ListView) findViewById(R.id.meetingList);
+
                 mListView.setAdapter(null);
-                ArrayList<TransferItem> transferList = new ArrayList<TransferItem>();
+                transferList = new ArrayList<TransferItem>();
 
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject item = array.getJSONObject(i);
@@ -196,11 +188,33 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                             item.getString(getString(R.string.jsonEndDate))));
                 }
                 mListView.setAdapter(new TransferAdapter(this, R.layout.list_item, transferList));
+
             } catch (JSONException e){
                 Log.e(TAG, "fillListView "+e.getMessage());
             }
         }
     }
+
+    @Override
+    public void onRefresh() {
+        fetchMovies();
+    }
+
+    /**
+     * Fetching movies json by making http call
+     */
+    private void fetchMovies() {
+
+        // showing refresh animation before making http call
+        swipeRefreshLayout.setRefreshing(true);
+        startSendService(TASK1_RECEIVE_MEETINGS);
+        swipeRefreshLayout.setRefreshing(false);
+
+
+    }
+
+
+
     private void showAlert() {
 
         new AlertDialog.Builder(this).setIconAttribute(android.R.attr.alertDialogIcon)
