@@ -40,6 +40,7 @@ public class RestClientService extends IntentService {
     public static final String APP_ID="id";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING=2;
+    final int TASK3_FULL_DESCRIPTION=3;
     public static final int STATUS_FINISHED = 1;
     public static final int STATUS_ERROR = 2;
     public RestClientService() {
@@ -55,19 +56,25 @@ public class RestClientService extends IntentService {
         final ResultReceiver receiver = i.getParcelableExtra(APP_RECEIVER);
         switch(code){
             case TASK1_RECEIVE_MEETINGS:{
-                getMeetingsRequest(receiver);
+                url = getString(R.string.urlGetMeeting);
+                url += "?"+APP_PREFERENCES_NAME+"=" + username + "&"+APP_PREFERENCES_PASSWORD+"=" + password;
+                getMeetingsRequest(receiver, url, code);
             } break;
             case TASK2_DELETE_MEETING:{
                 deleteMeetingRequest(receiver, i);
             } break;
+            case TASK3_FULL_DESCRIPTION:{
+                final int id = i.getIntExtra(APP_ID, -1);
+                url = getString(R.string.urlGetDescription);
+                url += "?"+APP_PREFERENCES_NAME+"=" + username + "&"+APP_PREFERENCES_PASSWORD+"=" + password+
+                "&"+APP_ID+"="+id;
+                getMeetingsRequest(receiver, url, code);
+            } break;
 
         }
     }
-    private void getMeetingsRequest(final ResultReceiver receiver){
+    private void getMeetingsRequest(final ResultReceiver receiver, String url, final int code){
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        url = getString(R.string.urlGetMeeting);
-        url += "?"+APP_PREFERENCES_NAME+"=" + username + "&"+APP_PREFERENCES_PASSWORD+"=" + password;
-
         JsonArrayRequest request =
                 new JsonArrayRequest(Request.Method.GET, url, null,
                         new Response.Listener<JSONArray>() {
@@ -75,13 +82,13 @@ public class RestClientService extends IntentService {
                             public void onResponse(JSONArray response) {
                                 Bundle bundle = new Bundle();
                                 JSONArray array = response;
-                                if(response.toString().equals("[{\"response\":\"true\"}]")){
+                                if(response.toString().equals("[{\"response\":\"false\"}]")){
                                     bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно");
-                                    bundle.putInt(APP_CODE_TASK, TASK1_RECEIVE_MEETINGS);
+                                    bundle.putInt(APP_CODE_TASK, code);
                                     receiver.send(STATUS_ERROR, bundle);
                                 } else {
                                     bundle.putString("result", response.toString());
-                                    bundle.putInt(APP_CODE_TASK, TASK1_RECEIVE_MEETINGS);
+                                    bundle.putInt(APP_CODE_TASK, code);
                                     receiver.send(STATUS_FINISHED, bundle);
                                 }
                                 Log.d(TAG, "onResponse "+response.toString());

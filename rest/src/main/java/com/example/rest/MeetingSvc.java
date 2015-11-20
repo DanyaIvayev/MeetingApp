@@ -83,27 +83,22 @@ public class MeetingSvc {
         addMeeting(name, description, begindate, enddate, priority);
     }
 
-    @POST
+    @GET
     @Path("/getDescription")
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
-    public String getDescription(String data) {
+    public String getDescription(@QueryParam("username") String username,
+                                 @QueryParam("password") String password,
+                                 @QueryParam("id") int id) {
         String res = null;
-        try {
-            String decodedValue1 = URLDecoder.decode(data, "UTF-8");
-            String[] splitStr = decodedValue1.split("[=&]");
-            String name = splitStr[1];
-            String begindate = splitStr[3];
-            String enddate = splitStr[5].substring(0, splitStr[5].length() - 2);
-            Meeting result = findMeeting(name, begindate, enddate);
+        if (this.username.equals(username) && this.password.equals(password)) {
+            Meeting result = findMeeting(id);
             if (result != null)
-                res = "\"description\":" + result.getDescription();
+                res = "[{\"description\":\"" + result.getDescription() + "\"}]";
             else
                 res = "[]";
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace();
-        } finally {
             return res;
-        }
+        } else
+            return "[{\"response\":\"false\"}]";
     }
 
     @PUT
@@ -145,7 +140,7 @@ public class MeetingSvc {
     @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
     public String deleteMeeting() {
         int id = Integer.parseInt((request.getHeader(APP_ID)));
-        String result ="[{\"response\":\"false\"}]";
+        String result = "[{\"response\":\"false\"}]";
         try {
             if (this.username.equals(username) && this.password.equals(password)) {
                 Meeting m = findMeeting(id);
