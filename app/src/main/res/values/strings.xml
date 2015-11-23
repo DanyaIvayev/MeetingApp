@@ -25,19 +25,26 @@
     <string name="missAccount">Необходимо ввести логин и пароль от сервера. Зайдите в Меню -> Настройки-> Войдите в систему</string>
     <string name="pref_category">Настройки Аккаунта</string>
     <string name="delete_message">Встреча удалена</string>
+    <string name="participant_add_message">Участник добавлен</string>
     <string name="iconContentDescription">Icon for delete</string>
     <string name="iconListContent">Icon for list item</string>
+    <string name="iconPriorityContent">Icon for priority</string>
+
     <string name="meetingTextView">meetingName</string>
     <string name="beginDateText">beginDate</string>
     <string name="endDateText">endDate</string>
-    <string name="urlGetMeeting">http://192.168.0.83:8080/rest/rest/meeting/getMeeting</string>
-    <string name="urlDeleteMeeting">http://192.168.0.83:8080/rest/rest/meeting/deleteMeeting</string>
-    <string name="urlGetDescription">http://192.168.0.83:8080/rest/rest/meeting/getDescription</string>
+    <string name="urlGetMeeting">http://192.168.1.103:8080/rest/rest/meeting/getMeeting</string>
+    <string name="urlDeleteMeeting">http://192.168.1.103:8080/rest/rest/meeting/deleteMeeting</string>
+    <string name="urlGetDescription">http://192.168.1.103:8080/rest/rest/meeting/getDescription</string>
+    <string name="urlAddParticipant">http://192.168.1.103:8080/rest/rest/meeting/addParticipant</string>
     <string name="unauthorized">[{\"response\":\"false\"}]</string>
     <string name="jsonMeetingName">name</string>
     <string name="jsonBeginDate">beginData</string>
     <string name="jsonEndDate">endData</string>
     <string name="jsonId">id</string>
+    <string name="jsonPriority">priority</string>
+    <string name="jsonDescription">description</string>
+    <string name="jsonPartisipant">participants</string>
     <string name="menu_add">Стать участником</string>
     <string name="menu_info">Подробно о встрече</string>
     <string name="firstname">Имя</string>
@@ -46,4 +53,10 @@
     <string name="post">Должность</string>
     <string name="participantText">Введите данные</string>
     <string name="participantTitle">Стать участником</string>
+    <string name="textBeginData">Дата начала:</string>
+    <string name="textEndDate">Дата зав.:</string>
+    <string name="jsonLastName">lastName</string>
+    <string name="jsonFirstName">firstName</string>
+    <string name="jsonPatronymic">patronymic</string>
+    <string name="jsonPost">post</string>
 </resources>

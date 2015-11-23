@@ -8,25 +8,33 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Request;
 
 import com.example.meeting.Meeting;
 import com.example.participant.Participant;
+import com.sun.grizzly.util.Charsets;
 import com.sun.jersey.api.view.Viewable;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.ext.Provider;
+
 
 @Path("/meeting")
 public class MeetingSvc {
@@ -89,73 +97,91 @@ public class MeetingSvc {
     public String getDescription(@QueryParam("username") String username,
                                  @QueryParam("password") String password,
                                  @QueryParam("id") int id) {
+
         String res = null;
         if (this.username.equals(username) && this.password.equals(password)) {
-            Meeting result = findMeeting(id);
-            if (result != null)
-                res = "[{\"description\":\"" + result.getDescription() + "\"}]";
-            else
-                res = "[]";
-            return res;
+            try {
+                Meeting result = findMeeting(id);
+                if (result != null) {
+                    res = result.getDetailedInformation();
+                    throw new Exception(res);
+                } else
+                    res = "[]";
+                return res;
+            } catch (Exception e) {
+                System.err.print(e.getMessage());
+            } finally {
+                return res;
+            }
         } else
             return "[{\"response\":\"false\"}]";
     }
 
     @PUT
-    @Path("/addParticipant")
-    public void addParticipant(String data) {
-        try {
-            String decodedValue1 = URLDecoder.decode(data, "UTF-8");
-            String[] splitStr = decodedValue1.split("[=&]");
-            String name = splitStr[1];
-            String begindate = splitStr[3];
-            String enddate = splitStr[5];
-            Participant participant = new Participant();
-            participant.setLastName(splitStr[7]);
-            participant.setFirstName(splitStr[9]);
-            participant.setPatronymic(splitStr[11]);
-            participant.setPost(splitStr[13].substring(0, splitStr[13].length() - 2));
-            Meeting m = findMeeting(name, begindate, enddate);
+    @Path("/addParticipant/{username}/{password}/{id}/{firstname}/{lastname}/{patronymic}/{post}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED+ ";charset=UTF-8")
+    public String addParticipant(@PathParam("username") String username,
+                                 @PathParam("password") String password,
+                                 @PathParam("id") String id,
+                                 @PathParam("firstname") String firstname,
+                                 @PathParam("lastname") String lastname,
+                                 @PathParam("patronymic") String patronymic,
+                                 @PathParam("post") String post
+                                 ) {
+        if (this.username.equals(username) && this.password.equals(password)) {
+            try {
+                lastname = URLDecoder.decode(lastname, "UTF-8");
+                Participant participant = new Participant();
+                participant.setLastName(lastname);
+                participant.setFirstName(URLDecoder.decode(firstname, "UTF-8"));
+                participant.setPatronymic(URLDecoder.decode(patronymic, "UTF-8"));
+                participant.setPost(URLDecoder.decode(post, "UTF-8"));
+                Meeting m = findMeeting(Integer.parseInt(id));
 
-            if (m != null) {
-                ArrayList<Participant> participants = m.getParticipants();
-                if (participants == null)
-                    participants = new ArrayList<Participant>();
-                participants.add(participant);
-                m.setParticipants(participants);
-                meetings.add(m);
-            }
-
-
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace();
-        }
-    }
-
-
-    // @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
-
-    @DELETE
-    @Path("/deleteMeeting")
-    @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
-    public String deleteMeeting() {
-        int id = Integer.parseInt((request.getHeader(APP_ID)));
-        String result = "[{\"response\":\"false\"}]";
-        try {
-            if (this.username.equals(username) && this.password.equals(password)) {
-                Meeting m = findMeeting(id);
-                //Meeting m = findMeeting(name, begindate, enddate);
                 if (m != null) {
-                    meetings.remove(m);
-                    result = "[{\"response\":\"true\"}]";
+                    ArrayList<Participant> participants = m.getParticipants();
+                    if (participants == null)
+                        participants = new ArrayList<Participant>();
+                    participants.add(participant);
+                    m.setParticipants(participants);
+                    meetings.add(m);
                 }
+                return "[{\"response\":\"true\"}]";
+
+            } catch (UnsupportedEncodingException uee) {
+                uee.printStackTrace();
+                return "[{\"response\":\"false\"}]";
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        } finally {
-            return result;
         }
+            else
+               return "[{\"response\":\"false\"}]";
+
     }
+
+
+        // @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
+
+        @DELETE
+        @Path("/deleteMeeting")
+        @Produces(MediaType.APPLICATION_JSON + ";charset=UTF-8")
+        public String deleteMeeting () {
+            int id = Integer.parseInt((request.getHeader(APP_ID)));
+            String result = "[{\"response\":\"false\"}]";
+            try {
+                if (this.username.equals(username) && this.password.equals(password)) {
+                    Meeting m = findMeeting(id);
+                    //Meeting m = findMeeting(name, begindate, enddate);
+                    if (m != null) {
+                        meetings.remove(m);
+                        result = "[{\"response\":\"true\"}]";
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            } finally {
+                return result;
+            }
+        }
 
 
     private Meeting findMeeting(String name, String begindate, String enddate) {
@@ -247,4 +273,6 @@ public class MeetingSvc {
             uee.printStackTrace();
         }
     }
+
+
 }

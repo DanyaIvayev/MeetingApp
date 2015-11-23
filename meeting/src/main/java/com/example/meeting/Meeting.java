@@ -88,18 +88,34 @@ public class Meeting {
     public String toString() {
         StringBuffer result = new StringBuffer("{" +"\"id\":\""+id+"\", "
                 + "\"name\":");
-        result.append("\"" + name + "\"").append(", \"description\":").append("\"" + description + "\"")
+        result.append("\"" + name + "\"")
                 .append(", \"beginData\":" + "\"" + beginData + "\"" +
                         ", \"endData\":" + "\"" + endData + "\"");
+// .append(", \"description\":").append("\"" + description + "\"")
+// if (participants != null) {
+//            result.append(", \"participants\":" );
+//
+//            for (Participant p : participants) {
+//                result.append(participants.toString() + ", ");
+//            }
+//
+//        }
+        result.append(", \"priority\":\"" + priority.toString() + "\"}");
+        return result.toString();
+    }
+
+    public String getDetailedInformation(){
+        StringBuffer result = new StringBuffer("[{\"description\":\"" +description+"\"");
         if (participants != null) {
             result.append(", \"participants\":" );
 
             for (Participant p : participants) {
                 result.append(participants.toString() + ", ");
             }
+            result=new StringBuffer(result.substring(0, result.length()-2));
 
         }
-        result.append(", \"priority\":\"" + priority.toString() + "\"}");
+        result.append( "}]");
         return result.toString();
     }
 }

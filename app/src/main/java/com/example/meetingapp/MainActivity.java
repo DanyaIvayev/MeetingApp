@@ -26,6 +26,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -51,24 +53,30 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     public static final String APP_RECEIVER = "receiver";     // ресивер
     public static final String APP_CODE_TASK = "codeTask";    // код задачи
-    //    public static final String APP_MEETING_NAME="name";     // название встречи
-//    public static final String APP_BEGIN_DATE="begindate";  //дата начала
-//    public static final String APP_END_DATE="enddate";      //дата конца
+    public static final String APP_LASTNAME="lastName";
+    public static final String APP_FIRSTNAME="firstName";
+    public static final String APP_PATONYMIC="patronymic";
+    public static final String APP_POST="post";
     public static final String APP_ID = "id";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING = 2;
     final int TASK3_FULL_DESCRIPTION = 3;
+    final int TASK4_PUT_PARTICIPANT = 4;
     private SharedPreferences preferences;
     String username;
     String password;
     int swipeID;
+    String lastName;
+    String firstName;
+    String patronymic;
+    String post;
     ListView mListView;
     DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
     JSONArray array = null;
     ArrayList<TransferItem> transferList;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private Context mContext;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +89,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         registerForContextMenu(mListView);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
-        mContext = getApplicationContext();
         getOverflowMenu();
     }
 
@@ -131,23 +138,23 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             break;
             case TASK2_DELETE_MEETING: {
                 switch (resultCode) {
-                    case RestClientService.STATUS_FINISHED: {
-                        Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
-                    }
-                    break;
-                    case RestClientService.STATUS_ERROR: {
-                        String error = resultData.getString(Intent.EXTRA_TEXT);
-                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
-                    }
-                    break;
+                case RestClientService.STATUS_FINISHED: {
+                    Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
                 }
+                break;
+                case RestClientService.STATUS_ERROR: {
+                    String error = resultData.getString(Intent.EXTRA_TEXT);
+                    Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                }
+                break;
             }
+        }
             break;
             case TASK3_FULL_DESCRIPTION: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED: {
                         String result = resultData.getString("result");
-                        result = result.substring(result.indexOf(":") + 2, result.lastIndexOf("\""));
+                        result = parseDescription(result);
                         showAboutDialog(true, result);
                     }
                     break;
@@ -157,8 +164,51 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         break;
                     }
                 }
+            } break;
+            case TASK4_PUT_PARTICIPANT:{
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED: {
+                        Toast.makeText(this, R.string.participant_add_message, Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                    case RestClientService.STATUS_ERROR: {
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                    }
+                    break;
+                }
             }
             break;
+        }
+    }
+
+    private String parseDescription(String result) {
+        String message = "";
+        try {
+
+            JSONArray array = new JSONArray(result);
+            JSONObject item = array.getJSONObject(0);
+            String description = item.getString(getString(R.string.jsonDescription));
+            if (description != null) {
+                message += "Описание: " + description;
+            }
+            if(item.has(getString(R.string.jsonPartisipant))) {
+                JSONArray parts = item.getJSONArray(getString(R.string.jsonPartisipant));
+                if (parts != null) {
+                    message += "\r\nУчастники:\r\n";
+                    for (int i = 0; i < parts.length(); i++) {
+                        item = parts.getJSONObject(i);
+                        message += item.getString(getString(R.string.jsonLastName));
+                        message += item.getString(getString(R.string.jsonFirstName)).substring(0, 1) + ".";
+                        message += item.getString(getString(R.string.jsonPatronymic)).substring(0, 1) + ".";
+                        message += "(" + item.getString(getString(R.string.jsonPost)) + ")\r\n";
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "onReceiveResult " + e.getMessage());
+        } finally {
+            return message;
         }
     }
 
@@ -210,7 +260,8 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                             item.getInt(getString(R.string.jsonId)),
                             item.getString(getString(R.string.jsonMeetingName)),
                             item.getString(getString(R.string.jsonBeginDate)),
-                            item.getString(getString(R.string.jsonEndDate))));
+                            item.getString(getString(R.string.jsonEndDate)),
+                            item.getString(getString(R.string.jsonPriority))));
                 }
                 mListView.setAdapter(new TransferAdapter(this, R.layout.list_item, transferList));
 
@@ -307,6 +358,13 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             case TASK2_DELETE_MEETING:
             case TASK3_FULL_DESCRIPTION: {
                 i.putExtra(APP_ID, swipeID);
+            } break;
+            case TASK4_PUT_PARTICIPANT:{
+                i.putExtra(APP_ID, swipeID);
+                i.putExtra(APP_LASTNAME, lastName);
+                i.putExtra(APP_FIRSTNAME, firstName);
+                i.putExtra(APP_PATONYMIC, patronymic);
+                i.putExtra(APP_POST, post);
             }
         }
         i.putExtra(APP_PREFERENCES_NAME, username);
@@ -340,7 +398,18 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        //LayoutInflater factory = LayoutInflater.from(getApplicationContext());
+                        //View participantDialogView = factory.inflate(
+                        //        R.layout.dialog_participant, null);
+                        EditText fn = (EditText) participantDialogView.findViewById(R.id.nameText);
+                        EditText ln = (EditText) participantDialogView.findViewById(R.id.lastNameText);
+                        EditText patr = (EditText) participantDialogView.findViewById(R.id.patronymicText);
+                        EditText pos = (EditText) participantDialogView.findViewById(R.id.postText);
+                        lastName = ln.getText().toString();
+                        firstName = fn.getText().toString();
+                        patronymic = patr.getText().toString();
+                        post = pos.getText().toString();
+                        startSendService(TASK4_PUT_PARTICIPANT);
                     }
                 });
 
@@ -352,12 +421,14 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         private String meetingName;
         private String beginDate;
         private String endDate;
+        private String priority;
 
-        public TransferItem(int id, String meetingName, String beginDate, String endDate) {
+        public TransferItem(int id, String meetingName, String beginDate, String endDate, String priority) {
             this.id = id;
             this.meetingName = meetingName;
             this.beginDate = beginDate;
             this.endDate = endDate;
+            this.priority = priority;
         }
 
         public int getId() {
@@ -391,6 +462,10 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         public void setEndDate(String endDate) {
             this.endDate = endDate;
         }
+
+        public String getPriority() {
+            return priority;
+        }
     }
 
     public class TransferAdapter extends ArrayAdapter<TransferItem> {
@@ -404,6 +479,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             TextView endDate;
             RelativeLayout listItem;
             LinearLayout mainView;
+            ImageView priorityIcon;
         }
 
         public TransferAdapter(Context context, int tvResId, ArrayList<TransferItem> items) {
@@ -423,6 +499,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 transferHolder.meetingName = (TextView) view.findViewById(R.id.meetingName);
                 transferHolder.beginDate = (TextView) view.findViewById(R.id.beginDate);
                 transferHolder.endDate = (TextView) view.findViewById(R.id.endDate);
+                transferHolder.priorityIcon = (ImageView) view.findViewById(R.id.imagePriority);
                 view.setTag(transferHolder);
             } else transferHolder = (TransferViewHolder) view.getTag();
 
@@ -432,6 +509,17 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 transferHolder.meetingName.setText(transfer.getMeetingName());
                 transferHolder.beginDate.setText(transfer.getBeginDate());
                 transferHolder.endDate.setText(transfer.getEndDate());
+                switch (transfer.getPriority()) {
+                    case "URGENT":
+                        transferHolder.priorityIcon.setImageResource(R.drawable.ic_urgent);
+                        break;
+                    case "ROUTINE":
+                        transferHolder.priorityIcon.setImageResource(R.drawable.ic_planned);
+                        break;
+                    case "POSSIBLE":
+                        transferHolder.priorityIcon.setImageResource(R.drawable.ic_possible);
+                        break;
+                }
             }
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) transferHolder.mainView.getLayoutParams();
             params.rightMargin = 0;
@@ -455,6 +543,8 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                                     public boolean onMenuItemClick(MenuItem item) {
                                         switch (item.getItemId()) {
                                             case R.id.add: {
+                                                TransferItem ti = getItem(pos);
+                                                swipeID = ti.getId();
                                                 showParticipantDialog();
                                                 return true;
                                             }
