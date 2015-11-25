@@ -21,10 +21,13 @@
     <string name="loginTitle">Войдите в систему</string>
     <string name="loginText">Введите логин и пароль для доступа к серверу</string>
     <string name="loginSummary">Вход не произведен</string>
+    <string name="descTitle">Поиск по описанию</string>
+    <string name="descText">Введите описание</string>
     <string name="workInternet">Отсутствует интернет соединение</string>
     <string name="missAccount">Необходимо ввести логин и пароль от сервера. Зайдите в Меню -> Настройки-> Войдите в систему</string>
     <string name="pref_category">Настройки Аккаунта</string>
     <string name="delete_message">Встреча удалена</string>
+    <string name="add_message">Встреча добавлена</string>
     <string name="participant_add_message">Участник добавлен</string>
     <string name="iconContentDescription">Icon for delete</string>
     <string name="iconListContent">Icon for list item</string>
@@ -37,6 +40,8 @@
     <string name="urlDeleteMeeting">http://192.168.1.103:8080/rest/rest/meeting/deleteMeeting</string>
     <string name="urlGetDescription">http://192.168.1.103:8080/rest/rest/meeting/getDescription</string>
     <string name="urlAddParticipant">http://192.168.1.103:8080/rest/rest/meeting/addParticipant</string>
+    <string name="urlGetMeetOnDes">http://192.168.1.103:8080/rest/rest/meeting/getMeetOnDes</string>
+    <string name="urlSetMeeting">http://192.168.1.103:8080/rest/rest/meeting/mobileSetMeeting</string>
     <string name="unauthorized">[{\"response\":\"false\"}]</string>
     <string name="jsonMeetingName">name</string>
     <string name="jsonBeginDate">beginData</string>
@@ -55,8 +60,17 @@
     <string name="participantTitle">Стать участником</string>
     <string name="textBeginData">Дата начала:</string>
     <string name="textEndDate">Дата зав.:</string>
+    <string name="textBeginTime">Время нач.:</string>
+    <string name="textEndTime">Время зав.:</string>
     <string name="jsonLastName">lastName</string>
     <string name="jsonFirstName">firstName</string>
     <string name="jsonPatronymic">patronymic</string>
     <string name="jsonPost">post</string>
+    <string name="newMeeting">Новая встреча</string>
+    <string name="metName">Название</string>
+    <string name="descriptionName">Описание</string>
+    <string name="priority">Приоритет:</string>
+    <string name="pUrgent">Срочная</string>
+    <string name="pPossible">По возможности</string>
+    <string name="pRoutine">Плановая</string>
 </resources>

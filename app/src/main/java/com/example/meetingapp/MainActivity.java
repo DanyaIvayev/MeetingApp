@@ -2,6 +2,8 @@ package com.example.meetingapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,14 +28,18 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -58,10 +64,17 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     public static final String APP_PATONYMIC="patronymic";
     public static final String APP_POST="post";
     public static final String APP_ID = "id";
+    public static final String APP_DESCRIPTION = "description";
+    public static final String APP_MEETING_NAME ="name";
+    public static final String APP_BEGIN_DATE = "begindate";
+    public static final String APP_END_DATE = "enddate";
+    public static final String APP_PRIORITY ="priority";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING = 2;
     final int TASK3_FULL_DESCRIPTION = 3;
     final int TASK4_PUT_PARTICIPANT = 4;
+    final int TASK5_MEETING_ON_DES = 5;
+    final int TASK6_SET_MEETING = 6;
     private SharedPreferences preferences;
     String username;
     String password;
@@ -69,15 +82,27 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     String lastName;
     String firstName;
     String patronymic;
+    String description;
     String post;
+    String meetingName;
+    String beginDate;
+    String endDate;
+    String priority;
     ListView mListView;
     DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
     JSONArray array = null;
     ArrayList<TransferItem> transferList;
     private SwipeRefreshLayout swipeRefreshLayout;
-
-
+    int myYear = 2015;
+    int myMonth = 10;
+    int myDay = 25;
+    int myHour = 14;
+    int myMinute = 35;
+    TextView editBeginDate;
+    TextView editEndDate;
+    TextView editBeginTime;
+    TextView editEndTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -179,6 +204,39 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 }
             }
             break;
+            case TASK5_MEETING_ON_DES: {
+                swipeRefreshLayout.setRefreshing(false);
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED:
+                /* Hide progress & extract result from bundle */
+                        try {
+
+                            String result = resultData.getString("result");
+                            array = new JSONArray(result);
+                            fillListView();
+                        } catch (JSONException e) {
+                            Log.e(TAG, "onReceiveResult " + e.getMessage());
+                        }
+                        break;
+                    case RestClientService.STATUS_ERROR:
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                        break;
+                }
+            } break;
+            case TASK6_SET_MEETING: {
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED:
+                /* Hide progress & extract result from bundle */
+                        Toast.makeText(this, R.string.add_message, Toast.LENGTH_SHORT).show();
+                        startSendService(TASK1_RECEIVE_MEETINGS);
+                        break;
+                    case RestClientService.STATUS_ERROR:
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
         }
     }
 
@@ -243,6 +301,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 showAlert();
             }
             break;
+            case R.id.action_search:{
+                enterDescription();
+            } break;
+            case R.id.action_add:{
+                showMeetingDialog();
+            } break;
 
         }
         return super.onOptionsItemSelected(item);
@@ -308,6 +372,38 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 .show();
     }
 
+    private void enterDescription() {
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_participant)
+                .setTitle(R.string.descTitle)
+                .setMessage(R.string.descText);
+        final EditText input = new EditText(MainActivity.this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        input.setLayoutParams(lp);
+        dialog.setView(input);
+                dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        description = input.getText().toString();
+                        if (!description.equals("")) {
+                            if (!isOnline())
+                                Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+                            else {
+                                swipeRefreshLayout.setRefreshing(true);
+                                startSendService(TASK5_MEETING_ON_DES);
+                            }
+
+                        }
+                    }
+
+                })
+                .setNegativeButton(R.string.no, null)
+                .show();
+    }
+
     private void showAboutDialog(boolean isDecription, String message) {
         Drawable icon = ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.ic_dialog_info).mutate();
         icon.setColorFilter(new ColorMatrixColorFilter(new float[]{
@@ -365,7 +461,18 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 i.putExtra(APP_FIRSTNAME, firstName);
                 i.putExtra(APP_PATONYMIC, patronymic);
                 i.putExtra(APP_POST, post);
-            }
+            } break;
+            case TASK5_MEETING_ON_DES:{
+                setProgressBarIndeterminateVisibility(true);
+                i.putExtra(APP_DESCRIPTION, description);
+            } break;
+            case TASK6_SET_MEETING:{
+                i.putExtra(APP_DESCRIPTION, description);
+                i.putExtra(APP_MEETING_NAME, meetingName);
+                i.putExtra(APP_BEGIN_DATE, beginDate);
+                i.putExtra(APP_END_DATE, endDate);
+                i.putExtra(APP_PRIORITY, priority);
+            } break;
         }
         i.putExtra(APP_PREFERENCES_NAME, username);
         i.putExtra(APP_PREFERENCES_PASSWORD, password);
@@ -398,9 +505,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        //LayoutInflater factory = LayoutInflater.from(getApplicationContext());
-                        //View participantDialogView = factory.inflate(
-                        //        R.layout.dialog_participant, null);
                         EditText fn = (EditText) participantDialogView.findViewById(R.id.nameText);
                         EditText ln = (EditText) participantDialogView.findViewById(R.id.lastNameText);
                         EditText patr = (EditText) participantDialogView.findViewById(R.id.patronymicText);
@@ -415,6 +519,120 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
         partDialog.show();
     }
+
+    private void showMeetingDialog(){
+        LayoutInflater factory = LayoutInflater.from(this);
+        final View meetingDialogView = factory.inflate(
+                R.layout.dialog_meeting, null);
+        final AlertDialog.Builder meetDialog = new AlertDialog.Builder(this);
+        editBeginDate = (TextView) meetingDialogView.findViewById(R.id.beginDateText);
+        editEndDate = (TextView) meetingDialogView.findViewById(R.id.endDateText);
+        editBeginTime = (TextView) meetingDialogView.findViewById(R.id.beginTimeText);
+        editEndTime = (TextView)meetingDialogView.findViewById(R.id.endTimeText);
+        editBeginDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               showDataPicker(myCallBack);
+            }
+        });
+        editEndDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDataPicker(myCallBackEnd);
+            }
+        });
+        editBeginTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTimePicker(myTimeBeginCall);
+            }
+        });
+        editEndTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTimePicker(myTimeEndCall);
+            }
+        });
+        meetDialog.setView(meetingDialogView)
+                .setTitle(R.string.newMeeting)
+                .setIcon(R.drawable.ic_participant)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText mn = (EditText) meetingDialogView.findViewById(R.id.metNameText);
+                        EditText dn = (EditText) meetingDialogView.findViewById(R.id.descriptionText);
+                        RadioGroup rad = (RadioGroup) meetingDialogView.findViewById(R.id.radioPriority);
+                        RadioButton check = (RadioButton) meetingDialogView.findViewById(rad.getCheckedRadioButtonId());
+                        TextView eData = (TextView) meetingDialogView.findViewById(R.id.beginDateText);
+                        TextView eTime = (TextView) meetingDialogView.findViewById(R.id.beginTimeText);
+                        TextView eEndData =(TextView) meetingDialogView.findViewById(R.id.endDateText);
+                        TextView eEndTime = (TextView) meetingDialogView.findViewById(R.id.endTimeText);
+
+                        meetingName = mn.getText().toString();
+                        description = dn.getText().toString();
+                        beginDate = eData.getText().toString()+" "+ eTime.getText().toString();
+                        endDate = eEndData.getText().toString()+" "+ eEndTime.getText().toString();
+                        priority = check.getText().toString();
+                        startSendService(TASK6_SET_MEETING);
+                    }
+                });
+
+        meetDialog.show();
+    }
+
+    private void showDataPicker(DatePickerDialog.OnDateSetListener myCallBack){
+        DatePickerDialog tpd = new DatePickerDialog(this, myCallBack, myYear, myMonth, myDay);
+        tpd.show();
+    }
+
+    DatePickerDialog.OnDateSetListener myCallBack = new DatePickerDialog.OnDateSetListener() {
+
+        public void onDateSet(DatePicker view, int year, int monthOfYear,
+                              int dayOfMonth) {
+            myYear = year;
+            myMonth = monthOfYear;
+            myDay = dayOfMonth;
+            editBeginDate.setText( myYear+"-" + (myMonth+1)+ "-"+myDay );
+        }
+    };
+
+    DatePickerDialog.OnDateSetListener myCallBackEnd = new DatePickerDialog.OnDateSetListener() {
+
+        public void onDateSet(DatePicker view, int year, int monthOfYear,
+                              int dayOfMonth) {
+            myYear = year;
+            myMonth = monthOfYear;
+            myDay = dayOfMonth;
+            editEndDate.setText( myYear+"-"+(myMonth+1) + "-" +myDay );
+        }
+    };
+
+    private void showTimePicker(TimePickerDialog.OnTimeSetListener myCallBack){
+        TimePickerDialog tpd = new TimePickerDialog(this, myCallBack, myHour, myMinute, true);
+        tpd.show();
+    }
+
+    TimePickerDialog.OnTimeSetListener myTimeBeginCall = new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            myHour = hourOfDay;
+            myMinute = minute;
+            editBeginTime.setText(myHour + ":" + myMinute);
+        }
+    };
+
+    TimePickerDialog.OnTimeSetListener myTimeEndCall = new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            myHour = hourOfDay;
+            myMinute = minute;
+            editEndTime.setText(myHour + ":" + myMinute);
+        }
+    };
 
     class TransferItem {
         private int id;

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:nestedScrollingEnabled="false">
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/scrollView" >
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false">
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/metNameText"
+                    android:layout_gravity="center_horizontal"
+                    android:inputType="text"
+                    android:layout_toRightOf="@+id/metNameTextView"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+                    android:text="Встреча" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/metName"
+                    android:id="@+id/metNameTextView"
+                    android:layout_gravity="center_horizontal"
+                    android:paddingTop="7dp"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+                    android:layout_alignParentRight="false" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/descriptionName"
+                    android:id="@+id/descriptionTextView"
+                    android:paddingTop="7dp"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"/>
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:ems="10"
+                    android:id="@+id/descriptionText"
+                    android:layout_toRightOf="@+id/descriptionTextView"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+                    android:text="Описание" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/textBeginData"
+                    android:id="@+id/beginDateTextView"
+                    android:paddingTop="7dp"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:ems="10"
+                    android:id="@+id/beginDateText"
+                    android:layout_toRightOf="@+id/beginDateTextView"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+                    android:text=""
+                    android:textSize="17sp"
+                    android:layout_marginTop="5dp"
+                    style="?android:listSeparatorTextViewStyle"
+                    android:textIsSelectable="false" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/textBeginTime"
+                    android:id="@+id/beginTimeTextView"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+                    android:paddingTop="7dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text=""
+                    android:id="@+id/beginTimeText"
+                    android:layout_toRightOf="@+id/beginTimeTextView"
+                    style="?android:listSeparatorTextViewStyle"
+                    android:textSize="17sp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/textEndDate"
+                    android:id="@+id/endDateTextView"
+                    android:paddingTop="7dp"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:ems="10"
+                    android:id="@+id/endDateText"
+                    android:layout_toRightOf="@+id/endDateTextView"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+                    android:text=""
+                    android:textSize="17sp"
+                    android:editable="false"
+                    android:layout_alignParentBottom="false"
+                    android:layout_alignWithParentIfMissing="false"
+                    android:layout_alignParentRight="false"
+                    android:layout_alignParentEnd="false"
+                    android:layout_alignParentStart="false"
+                    android:layout_marginTop="5dp"
+                    style="?android:listSeparatorTextViewStyle"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/textBeginTime"
+                    android:id="@+id/endTimeTextView"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+                    android:paddingTop="7dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text=""
+                    android:id="@+id/endTimeText"
+                    android:layout_toRightOf="@+id/endTimeTextView"
+                    style="?android:listSeparatorTextViewStyle"
+                    android:textSize="17sp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/priority"
+                    android:id="@+id/ptiorityTextView"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentStart="false"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginTop="6dp"
+                    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft" />
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/ptiorityTextView"
+                    android:id="@+id/radioPriority"
+                    >
+
+                    <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pUrgent"
+                        android:id="@+id/urgentRadio"
+
+                        android:checked="true"
+                        android:singleLine="false" />
+
+                    <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pRoutine"
+                        android:id="@+id/routineRadio"
+
+                        />
+
+                    <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pPossible"
+                        android:id="@+id/possibleRadio" />
+                </RadioGroup>
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

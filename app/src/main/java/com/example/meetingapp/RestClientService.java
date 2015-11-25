@@ -41,10 +41,17 @@ public class RestClientService extends IntentService {
     public static final String APP_FIRSTNAME="firstName";
     public static final String APP_PATONYMIC="patronymic";
     public static final String APP_POST="post";
+    public static final String APP_DESCRIPTION = "description";
+    public static final String APP_MEETING_NAME ="name";
+    public static final String APP_BEGIN_DATE = "begindate";
+    public static final String APP_END_DATE = "enddate";
+    public static final String APP_PRIORITY ="priority";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING=2;
     final int TASK3_FULL_DESCRIPTION=3;
     final int TASK4_PUT_PARTICIPANT = 4;
+    final int TASK5_MEETING_ON_DES = 5;
+    final int TASK6_SET_MEETING = 6;
     public static final int STATUS_FINISHED = 1;
     public static final int STATUS_ERROR = 2;
     public RestClientService() {
@@ -78,6 +85,20 @@ public class RestClientService extends IntentService {
 
                 putParticipant(receiver, i);
             } break;
+            case TASK5_MEETING_ON_DES:{
+                try {
+                    String description = i.getStringExtra(APP_DESCRIPTION);
+                    description = URLEncoder.encode(description, "UTF-8");
+                    url = getString(R.string.urlGetMeetOnDes);
+                    url += "?" + APP_PREFERENCES_NAME + "=" + username + "&" + APP_PREFERENCES_PASSWORD + "=" + password
+                            + "&" + APP_DESCRIPTION + "=" + description;
+                    getMeetingsRequest(receiver, url, code);
+                } catch (UnsupportedEncodingException e){
+                    Log.e(TAG, "onHandleIntent "+ e.getMessage());
+                }
+            }case TASK6_SET_MEETING:{
+                postMeeting(receiver, i);
+            }
 
         }
     }
@@ -131,63 +152,17 @@ public class RestClientService extends IntentService {
                         @Override
                         protected Map<String, String> getParams() throws AuthFailureError {
                             Map<String, String> params = new HashMap<String, String>();
-//                            params.put(APP_PREFERENCES_NAME, username);
-//                            params.put(APP_PREFERENCES_PASSWORD, password);
-//                            params.put(APP_ID, String.valueOf(id));
-//                            params.put(APP_LASTNAME, lastname);
-//                            params.put(APP_FIRSTNAME, firstname);
-//                            params.put(APP_PATONYMIC, patronymic);
-//                            params.put(APP_POST, post);
                             return params;
                         }
                         @Override
                         public Map<String, String> getHeaders()  {
                             Map<String, String> params = new HashMap<String, String>();
                             params.put("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
-//                            params.put(APP_PREFERENCES_NAME, username);
-//                            params.put(APP_PREFERENCES_PASSWORD, password);
-//                            params.put(APP_ID, String.valueOf(id));
-//                            params.put(APP_LASTNAME, lastname);
-//                            params.put(APP_FIRSTNAME, firstname);
-//                            params.put(APP_PATONYMIC, patronymic);
-//                            params.put(APP_POST, post);
                             return params;
                         }
 
                     };
-//                    {
-//                        protected Map<String, String> getParams() throws AuthFailureError {
-//                            Map<String, String> params = new HashMap<String, String>();
-//                            params.put(APP_PREFERENCES_NAME, username);
-//                            params.put(APP_PREFERENCES_PASSWORD, password);
-//                            params.put(APP_ID, String.valueOf(id));
-//                            params.put(APP_LASTNAME, lastname);
-//                            params.put(APP_FIRSTNAME, firstname);
-//                            params.put(APP_PATONYMIC, patronymic);
-//                            params.put(APP_POST, post);
-//
-//                            return params;
-//                        }
-//
-//                        @Override
-//                        public Map<String, String> getHeaders() throws AuthFailureError {
-//                            HashMap<String, String> headers = new HashMap<String, String>();
-//                            headers.put("Content-Type", "application/json");
-//                            headers.put("Accept", "application/json");
-//                            return headers;
-//                        }
-//                        @Override
-//                        public byte[] getBody() {
-//
-//                            try {
-//                                Log.i("json", object.toString());
-//                                return object.toString().getBytes("UTF-8");
-//                            } catch (UnsupportedEncodingException e) {
-//                                e.printStackTrace();
-//                            }
-//                            return null;
-//                        }
-//            };
+
             request.setRetryPolicy(
                     new DefaultRetryPolicy(3 * 1000,  DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
@@ -288,4 +263,75 @@ public class RestClientService extends IntentService {
             e.printStackTrace();
         }
     }
+
+    private void postMeeting(final ResultReceiver receiver, Intent i) {
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String meetingName = i.getStringExtra(APP_MEETING_NAME);
+        String description = i.getStringExtra(APP_DESCRIPTION);
+        String beginDate = i.getStringExtra(APP_BEGIN_DATE);
+        String endDate = i.getStringExtra(APP_END_DATE);
+        String priority = i.getStringExtra(APP_PRIORITY);
+        url = getString(R.string.urlSetMeeting);
+
+        try{
+            meetingName = URLEncoder.encode(meetingName,"UTF-8");
+            description = URLEncoder.encode(description, "UTF-8");
+            beginDate=URLEncoder.encode(beginDate,"UTF-8");
+            endDate = URLEncoder.encode(endDate, "UTF-8");
+            priority=URLEncoder.encode(priority, "UTF-8");
+            url += "/"+ username + "/"+ password+"/"+meetingName
+                    +"/"+description+"/"+beginDate+"/"+endDate+"/"+priority;
+
+            JsonArrayRequest request =
+                    new JsonArrayRequest(Request.Method.POST, url, null,
+                            new Response.Listener<JSONArray>(){
+                                @Override
+                                public void onResponse(JSONArray response) {
+                                    Bundle bundle = new Bundle();
+                                    if(response.toString().equals("[{\"response\":\"false\"}]")){
+                                        bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно, либо ошибка на сервере");
+                                        bundle.putInt(APP_CODE_TASK, TASK6_SET_MEETING);
+                                        receiver.send(STATUS_ERROR, bundle);
+                                    } else {
+                                        bundle.putInt(APP_CODE_TASK, TASK6_SET_MEETING);
+                                        receiver.send(STATUS_FINISHED, bundle);
+                                    }
+                                    Log.d(TAG, "onResponse "+response.toString());
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    Log.e(TAG, "onErrorResponse Request failed: " + error.toString());
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString(Intent.EXTRA_TEXT, "Сервер не доступен: Превышено время ожидания");
+                                    bundle.putInt(APP_CODE_TASK, TASK6_SET_MEETING);
+                                    receiver.send(STATUS_ERROR, bundle);
+                                }
+                            }){
+
+
+                        @Override
+                        protected Map<String, String> getParams() throws AuthFailureError {
+                            Map<String, String> params = new HashMap<String, String>();
+                            return params;
+                        }
+                        @Override
+                        public Map<String, String> getHeaders()  {
+                            Map<String, String> params = new HashMap<String, String>();
+                            params.put("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+                            return params;
+                        }
+
+                    };
+
+            request.setRetryPolicy(
+                    new DefaultRetryPolicy(3 * 1000,  DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
