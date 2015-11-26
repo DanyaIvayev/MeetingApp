@@ -1,8 +1,10 @@
 package com.example.meetingapp;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -46,7 +48,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -75,6 +83,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     final int TASK4_PUT_PARTICIPANT = 4;
     final int TASK5_MEETING_ON_DES = 5;
     final int TASK6_SET_MEETING = 6;
+    final int TASK7_BACKGROUND_RECEIVE = 7;
     private SharedPreferences preferences;
     String username;
     String password;
@@ -89,7 +98,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     String endDate;
     String priority;
     ListView mListView;
-    DownloadResultReceiver mReceiver;
+    final DownloadResultReceiver mReceiver = new DownloadResultReceiver(new Handler());
     String jsonFileName = "messages.json";
     JSONArray array = null;
     ArrayList<TransferItem> transferList;
@@ -103,6 +112,8 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     TextView editEndDate;
     TextView editBeginTime;
     TextView editEndTime;
+    Intent i;
+    private PendingIntent pendingIntent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +123,15 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         ab.setIcon(R.drawable.ic_launcher);
         mListView = (ListView) findViewById(R.id.meetingList);
         registerForContextMenu(mListView);
+        i = new Intent(this, RestClientService.class);
+        Intent myReceiver = new Intent(this, BroadReceive.class);
+
+        mReceiver.setReceiver(this);
+        Log.d("BroadReceive", "onCreate receiver main " + mReceiver);
+        myReceiver.putExtra(APP_RECEIVER, mReceiver);
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myReceiver,0);
+        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 150000, pendingIntent);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
         getOverflowMenu();
@@ -121,18 +141,24 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     public void onResume() {
         super.onResume();
         boolean isOnline = isOnline();
-        preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-        if (preferences != null) {
-            if (preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)) {
-                username = preferences.getString(APP_PREFERENCES_NAME, "");
-                password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
-                if (!isOnline)
-                    Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
-                else {
-                    startSendService(TASK1_RECEIVE_MEETINGS);
+        if (getIntent().getBooleanExtra("isStartedFromNotification", false)) {
+            array = readJsonObject();
+            fillListView();
+        } else {
+
+            preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+            if (preferences != null) {
+                if (preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)) {
+                    username = preferences.getString(APP_PREFERENCES_NAME, "");
+                    password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
+                    if (!isOnline)
+                        Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+                    else {
+                        startSendService(TASK1_RECEIVE_MEETINGS);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
                 }
-            } else {
-                Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -144,7 +170,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             case TASK1_RECEIVE_MEETINGS: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED:
-                /* Hide progress & extract result from bundle */
                         try {
                             setProgressBarIndeterminateVisibility(false);
                             String result = resultData.getString("result");
@@ -236,7 +261,25 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         Toast.makeText(this, error, Toast.LENGTH_LONG).show();
                         break;
                 }
-            }
+            } break;
+            case TASK7_BACKGROUND_RECEIVE:{
+                switch (resultCode) {
+                    case RestClientService.STATUS_FINISHED:
+                        try {
+                            setProgressBarIndeterminateVisibility(false);
+                            String result = resultData.getString("result");
+                            array = new JSONArray(result);
+                            fillListView();
+                        } catch (JSONException e) {
+                            Log.e(TAG, "onReceiveResult " + e.getMessage());
+                        }
+                        break;
+                    case RestClientService.STATUS_ERROR:
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                        break;
+                }
+            } break;
         }
     }
 
@@ -447,9 +490,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     }
 
     private void startSendService(int code) {
-        mReceiver = new DownloadResultReceiver(new Handler());
-        mReceiver.setReceiver(this);
-        Intent i = new Intent(this, RestClientService.class);
+        //mReceiver = new DownloadResultReceiver(new Handler());
+        //mReceiver.setReceiver(this);
+        //i = new Intent(this, RestClientService.class);
         switch (code) {
             case TASK2_DELETE_MEETING:
             case TASK3_FULL_DESCRIPTION: {
@@ -633,7 +676,41 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             editEndTime.setText(myHour + ":" + myMinute);
         }
     };
+    private JSONArray readJsonObject() {
+        JSONArray array = null;
+        String path = this.getFilesDir().getAbsolutePath() + "/" + jsonFileName;
+        File file = new File(path);
+        FileInputStream stream =null;
+        if (file.exists()) {
+            try {
+                stream = new FileInputStream(file);
+                String jsonStr = null;
 
+                FileChannel channel = stream.getChannel();
+                MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+                jsonStr = Charset.defaultCharset().decode(buffer).toString();
+                Log.d(TAG, "readJsonObject " + jsonStr);
+
+                if (jsonStr != null) {
+                    array = new JSONArray(jsonStr);
+                }
+            } catch ( JSONException | IOException fnfe) {
+                Log.e(TAG, "readJsonObject " + fnfe.getMessage());
+            } finally {
+                try {
+                    if(stream!=null)
+                        stream.close();
+                } catch (IOException ie) {
+                    Log.e(TAG, "readJsonObject " + ie.getMessage());
+                }
+                return array;
+            }
+
+        } else {
+            File jFile = new File(getFilesDir(), jsonFileName);
+            return new JSONArray();
+        }
+    }
     class TransferItem {
         private int id;
         private String meetingName;
