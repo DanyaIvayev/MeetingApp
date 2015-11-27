@@ -15,7 +15,7 @@
             android:inputType="text"
             android:layout_toRightOf="@+id/nameTextView"
             android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-            android:text="Данис" />
+            />
 
         <TextView
             android:layout_width="wrap_content"
@@ -50,7 +50,7 @@
             android:id="@+id/lastNameText"
             android:layout_toRightOf="@+id/lastNameTextView"
             android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-            android:text="Иваев" />
+             />
 
     </RelativeLayout>
     <RelativeLayout
@@ -74,7 +74,7 @@
             android:id="@+id/patronymicText"
             android:layout_toRightOf="@+id/patronymicTextView"
             android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-            android:text="Зуфярович" />
+             />
 
     </RelativeLayout>
     <RelativeLayout
@@ -98,7 +98,7 @@
             android:id="@+id/postText"
             android:layout_toRightOf="@+id/postTextView"
             android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-            android:text="Разработчик" />
+            />
 
     </RelativeLayout>
 </LinearLayout>

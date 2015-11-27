@@ -30,12 +30,13 @@
         android:weightSum="1">
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="82dp"
+            android:orientation="horizontal"
+            android:background="@drawable/list_item_fromt">
             <ImageView
                 android:id="@+id/icon"
-                android:layout_width="46dp"
-                android:layout_height="46dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:src="@drawable/list_icon"
                 android:layout_alignParentBottom="false"
                 android:layout_alignParentLeft="false"
@@ -65,7 +66,7 @@
                 android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
                 android:paddingRight="?android:attr/listPreferredItemPaddingRight"
                 android:text="@string/beginDateText"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:layout_toLeftOf="@+id/imagePriority"></TextView>
             <TextView
                 android:id="@+id/endDate"
@@ -77,7 +78,7 @@
                 android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
                 android:paddingRight="?android:attr/listPreferredItemPaddingRight"
                 android:text="@string/endDateText"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:layout_toLeftOf="@+id/imagePriority"></TextView>
 
             <TextView
@@ -88,7 +89,7 @@
                 android:layout_toRightOf="@+id/icon"
                 android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
                 android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:layout_below="@+id/meetingName"
                 android:layout_above="@+id/endDate" />
 
@@ -99,7 +100,7 @@
                 android:id="@+id/textEndDate"
                 android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
                 android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:layout_toRightOf="@+id/icon"
                 android:layout_below="@+id/textBeginDate" />
 

@@ -148,6 +148,7 @@ public class MeetingSvc {
                 Meeting m = findMeeting(Integer.parseInt(id));
 
                 if (m != null) {
+                    meetings.remove(m);
                     ArrayList<Participant> participants = m.getParticipants();
                     if (participants == null)
                         participants = new ArrayList<Participant>();
@@ -175,7 +176,6 @@ public class MeetingSvc {
         try {
             if (this.username.equals(username) && this.password.equals(password)) {
                 Meeting m = findMeeting(id);
-                //Meeting m = findMeeting(name, begindate, enddate);
                 if (m != null) {
                     meetings.remove(m);
                     result = "[{\"response\":\"true\"}]";
@@ -186,17 +186,6 @@ public class MeetingSvc {
         } finally {
             return result;
         }
-    }
-
-
-    private Meeting findMeeting(String name, String begindate, String enddate) {
-        Meeting meeting = null;
-        for (Meeting m : meetings) {
-            if (m.getName().equals(name) && m.getBeginData().equals(begindate) && m.getEndData().equals(enddate)) {
-                meeting = m;
-            }
-        }
-        return meeting;
     }
 
     private Meeting findMeeting(int id) {
@@ -254,7 +243,7 @@ public class MeetingSvc {
                 description = URLDecoder.decode(description, "UTF-8");
                 ArrayList<Meeting> meeting = new ArrayList<Meeting>();
                 for (Meeting m : meetings) {
-                    if (m.getDescription().equals(description))
+                    if (m.getDescription().toLowerCase().contains(description.toLowerCase()))
                         meeting.add(m);
                 }
                 if (meeting.isEmpty())
@@ -308,6 +297,4 @@ public class MeetingSvc {
             uee.printStackTrace();
         }
     }
-
-
 }

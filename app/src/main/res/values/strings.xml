@@ -58,7 +58,7 @@
     <string name="post">Должность</string>
     <string name="participantText">Введите данные</string>
     <string name="participantTitle">Стать участником</string>
-    <string name="textBeginData">Дата начала:</string>
+    <string name="textBeginData">Дата нач:</string>
     <string name="textEndDate">Дата зав.:</string>
     <string name="textBeginTime">Время нач.:</string>
     <string name="textEndTime">Время зав.:</string>
@@ -69,6 +69,7 @@
     <string name="newMeeting">Новая встреча</string>
     <string name="metName">Название</string>
     <string name="descriptionName">Описание</string>
+    <string name="partTitle">Участники:</string>
     <string name="priority">Приоритет:</string>
     <string name="pUrgent">Срочная</string>
     <string name="pPossible">По возможности</string>

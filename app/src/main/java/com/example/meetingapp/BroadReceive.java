@@ -16,7 +16,6 @@ public class BroadReceive extends BroadcastReceiver {
     public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
-    public static String STARTFOREGROUND_ACTION = "com.example.meetingapp.action.startforeground";
     public static final String APP_RECEIVER = "receiver";     // ресивер
     private SharedPreferences preferences;
     final int TASK7_BACKGROUND_RECEIVE = 7;
@@ -32,10 +31,9 @@ public class BroadReceive extends BroadcastReceiver {
                 i.putExtra(APP_CODE_TASK, TASK7_BACKGROUND_RECEIVE);
                 i.putExtra(APP_PREFERENCES_NAME, username);
                 i.putExtra(APP_PREFERENCES_PASSWORD, password);
-                final ResultReceiver receiver = intent.getParcelableExtra(APP_RECEIVER);
-                Log.d("BroadReceive", "onReceive receiver"+receiver);
-                i.putExtra(APP_RECEIVER, receiver);
-                //i.setAction(STARTFOREGROUND_ACTION);
+               // final DownloadResultReceiver receiver = (DownloadResultReceiver)intent.getParcelableExtra(APP_RECEIVER);
+                //Log.d("BroadReceive", "onReceive receiver"+receiver);
+               // i.putExtra(APP_RECEIVER, receiver);
                 context.startService(i);
             }
         }

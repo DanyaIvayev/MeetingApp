@@ -91,15 +91,6 @@ public class Meeting {
         result.append("\"" + name + "\"")
                 .append(", \"beginData\":" + "\"" + beginData + "\"" +
                         ", \"endData\":" + "\"" + endData + "\"");
-// .append(", \"description\":").append("\"" + description + "\"")
-// if (participants != null) {
-//            result.append(", \"participants\":" );
-//
-//            for (Participant p : participants) {
-//                result.append(participants.toString() + ", ");
-//            }
-//
-//        }
         result.append(", \"priority\":\"" + priority.toString() + "\"}");
         return result.toString();
     }

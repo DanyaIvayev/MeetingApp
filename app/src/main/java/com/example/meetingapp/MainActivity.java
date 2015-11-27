@@ -6,9 +6,11 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
@@ -18,17 +20,14 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.support.v7.app.ActionBar;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -36,7 +35,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
-import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -61,22 +59,22 @@ import android.support.v4.widget.SwipeRefreshLayout;
 
 public class MainActivity extends ActionBarActivity implements DownloadResultReceiver.Receiver, SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = "MainActivity";
-    private JSONObject res;
     public static final String APP_PREFERENCES = "com.example.meetingapp_preferences";
     public static final String APP_PREFERENCES_NAME = "username"; // имя пользователя
     public static final String APP_PREFERENCES_PASSWORD = "password"; // пароль
     public static final String APP_RECEIVER = "receiver";     // ресивер
     public static final String APP_CODE_TASK = "codeTask";    // код задачи
-    public static final String APP_LASTNAME="lastName";
-    public static final String APP_FIRSTNAME="firstName";
-    public static final String APP_PATONYMIC="patronymic";
-    public static final String APP_POST="post";
+    public static final String APP_LASTNAME = "lastName";
+    public static final String APP_FIRSTNAME = "firstName";
+    public static final String APP_PATONYMIC = "patronymic";
+    public static final String APP_POST = "post";
     public static final String APP_ID = "id";
     public static final String APP_DESCRIPTION = "description";
-    public static final String APP_MEETING_NAME ="name";
+    public static final String APP_MEETING_NAME = "name";
     public static final String APP_BEGIN_DATE = "begindate";
     public static final String APP_END_DATE = "enddate";
-    public static final String APP_PRIORITY ="priority";
+    public static final String APP_PRIORITY = "priority";
+    public static final String APP_RESULT = "result";
     final int TASK1_RECEIVE_MEETINGS = 1;
     final int TASK2_DELETE_MEETING = 2;
     final int TASK3_FULL_DESCRIPTION = 3;
@@ -98,7 +96,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     String endDate;
     String priority;
     ListView mListView;
-    final DownloadResultReceiver mReceiver = new DownloadResultReceiver(new Handler());
+    DownloadResultReceiver mReceiver;
     String jsonFileName = "messages.json";
     JSONArray array = null;
     ArrayList<TransferItem> transferList;
@@ -114,23 +112,22 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     TextView editEndTime;
     Intent i;
     private PendingIntent pendingIntent;
+    private BroadcastReceiver message;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ActionBar ab = getSupportActionBar();
+
         ab.setDisplayShowHomeEnabled(true);
         ab.setIcon(R.drawable.ic_launcher);
         mListView = (ListView) findViewById(R.id.meetingList);
         registerForContextMenu(mListView);
-        i = new Intent(this, RestClientService.class);
-        Intent myReceiver = new Intent(this, BroadReceive.class);
 
-        mReceiver.setReceiver(this);
-        Log.d("BroadReceive", "onCreate receiver main " + mReceiver);
-        myReceiver.putExtra(APP_RECEIVER, mReceiver);
-        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myReceiver,0);
-        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        Intent myReceiver = new Intent(this, BroadReceive.class);
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myReceiver, 0);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 150000, pendingIntent);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
@@ -140,6 +137,24 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     @Override
     public void onResume() {
         super.onResume();
+        IntentFilter intentFilter = new IntentFilter(
+                "android.intent.action.MAIN");
+
+        message = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String msg = intent.getStringExtra("msg");
+                if (msg.equals("Received")) {
+                    array = readJsonObject();
+                    fillListView();
+                } else {
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        //registering our receiver
+        this.registerReceiver(message, intentFilter);
         boolean isOnline = isOnline();
         if (getIntent().getBooleanExtra("isStartedFromNotification", false)) {
             array = readJsonObject();
@@ -164,6 +179,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        this.unregisterReceiver(this.message);
+    }
+
+    @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         int taskCode = resultData.getInt(APP_CODE_TASK);
         switch (taskCode) {
@@ -172,7 +193,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                     case RestClientService.STATUS_FINISHED:
                         try {
                             setProgressBarIndeterminateVisibility(false);
-                            String result = resultData.getString("result");
+                            String result = resultData.getString(APP_RESULT);
                             array = new JSONArray(result);
                             fillListView();
                         } catch (JSONException e) {
@@ -188,24 +209,24 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             break;
             case TASK2_DELETE_MEETING: {
                 switch (resultCode) {
-                case RestClientService.STATUS_FINISHED: {
-                    Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
+                    case RestClientService.STATUS_FINISHED: {
+                        Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                    case RestClientService.STATUS_ERROR: {
+                        String error = resultData.getString(Intent.EXTRA_TEXT);
+                        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                    }
+                    break;
                 }
-                break;
-                case RestClientService.STATUS_ERROR: {
-                    String error = resultData.getString(Intent.EXTRA_TEXT);
-                    Toast.makeText(this, error, Toast.LENGTH_LONG).show();
-                }
-                break;
             }
-        }
             break;
             case TASK3_FULL_DESCRIPTION: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED: {
-                        String result = resultData.getString("result");
+                        String result = resultData.getString(APP_RESULT);
                         result = parseDescription(result);
-                        showAboutDialog(true, result);
+                        showTextDialog(true, result);
                     }
                     break;
                     case RestClientService.STATUS_ERROR: {
@@ -214,8 +235,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         break;
                     }
                 }
-            } break;
-            case TASK4_PUT_PARTICIPANT:{
+            }
+            break;
+            case TASK4_PUT_PARTICIPANT: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED: {
                         Toast.makeText(this, R.string.participant_add_message, Toast.LENGTH_SHORT).show();
@@ -231,12 +253,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             break;
             case TASK5_MEETING_ON_DES: {
                 swipeRefreshLayout.setRefreshing(false);
+                setProgressBarIndeterminateVisibility(false);
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED:
-                /* Hide progress & extract result from bundle */
                         try {
 
-                            String result = resultData.getString("result");
+                            String result = resultData.getString(APP_RESULT);
                             array = new JSONArray(result);
                             fillListView();
                         } catch (JSONException e) {
@@ -248,11 +270,11 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         Toast.makeText(this, error, Toast.LENGTH_LONG).show();
                         break;
                 }
-            } break;
+            }
+            break;
             case TASK6_SET_MEETING: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED:
-                /* Hide progress & extract result from bundle */
                         Toast.makeText(this, R.string.add_message, Toast.LENGTH_SHORT).show();
                         startSendService(TASK1_RECEIVE_MEETINGS);
                         break;
@@ -261,13 +283,14 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         Toast.makeText(this, error, Toast.LENGTH_LONG).show();
                         break;
                 }
-            } break;
-            case TASK7_BACKGROUND_RECEIVE:{
+            }
+            break;
+            case TASK7_BACKGROUND_RECEIVE: {
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED:
                         try {
                             setProgressBarIndeterminateVisibility(false);
-                            String result = resultData.getString("result");
+                            String result = resultData.getString(APP_RESULT);
                             array = new JSONArray(result);
                             fillListView();
                         } catch (JSONException e) {
@@ -279,7 +302,9 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         Toast.makeText(this, error, Toast.LENGTH_LONG).show();
                         break;
                 }
-            } break;
+            }
+            break;
+
         }
     }
 
@@ -291,18 +316,18 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             JSONObject item = array.getJSONObject(0);
             String description = item.getString(getString(R.string.jsonDescription));
             if (description != null) {
-                message += "Описание: " + description;
+                message += getString(R.string.descriptionName) + ": " + description;
             }
-            if(item.has(getString(R.string.jsonPartisipant))) {
+            if (item.has(getString(R.string.jsonPartisipant))) {
                 JSONArray parts = item.getJSONArray(getString(R.string.jsonPartisipant));
                 if (parts != null) {
-                    message += "\r\nУчастники:\r\n";
+                    message += "\r\n" + getString(R.string.partTitle) + "\r\n";
                     for (int i = 0; i < parts.length(); i++) {
                         item = parts.getJSONObject(i);
                         message += item.getString(getString(R.string.jsonLastName));
-                        message += item.getString(getString(R.string.jsonFirstName)).substring(0, 1) + ".";
+                        message += " "+item.getString(getString(R.string.jsonFirstName)).substring(0, 1) + ".";
                         message += item.getString(getString(R.string.jsonPatronymic)).substring(0, 1) + ".";
-                        message += "(" + item.getString(getString(R.string.jsonPost)) + ")\r\n";
+                        message += " (" + item.getString(getString(R.string.jsonPost)) + ")\r\n";
                     }
                 }
             }
@@ -315,7 +340,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -337,27 +361,31 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             }
             break;
             case R.id.action_about: {
-                showAboutDialog(false, null);
+                showTextDialog(false, null);
             }
             break;
             case R.id.action_exit: {
                 showAlert();
             }
             break;
-            case R.id.action_search:{
+            case R.id.action_search: {
                 enterDescription();
-            } break;
-            case R.id.action_add:{
+            }
+            break;
+            case R.id.action_add: {
                 showMeetingDialog();
-            } break;
+            }
+            break;
 
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void fillListView() {
+
         if (array != null) {
             try {
+                mListView.setAdapter(null);
                 mListView = (ListView) findViewById(R.id.meetingList);
                 mListView.setAdapter(null);
                 transferList = new ArrayList<TransferItem>();
@@ -426,28 +454,28 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 LinearLayout.LayoutParams.MATCH_PARENT);
         input.setLayoutParams(lp);
         dialog.setView(input);
-                dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+        dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        description = input.getText().toString();
-                        if (!description.equals("")) {
-                            if (!isOnline())
-                                Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
-                            else {
-                                swipeRefreshLayout.setRefreshing(true);
-                                startSendService(TASK5_MEETING_ON_DES);
-                            }
-
-                        }
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                description = input.getText().toString().trim();
+                if (!description.equals("")) {
+                    if (!isOnline())
+                        Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+                    else {
+                        //swipeRefreshLayout.setRefreshing(true);
+                        startSendService(TASK5_MEETING_ON_DES);
                     }
 
-                })
+                }
+            }
+
+        })
                 .setNegativeButton(R.string.no, null)
                 .show();
     }
 
-    private void showAboutDialog(boolean isDecription, String message) {
+    private void showTextDialog(boolean isDecription, String message) {
         Drawable icon = ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.ic_dialog_info).mutate();
         icon.setColorFilter(new ColorMatrixColorFilter(new float[]{
                 0.5f, 0, 0, 0, 0,
@@ -490,32 +518,36 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
     }
 
     private void startSendService(int code) {
-        //mReceiver = new DownloadResultReceiver(new Handler());
-        //mReceiver.setReceiver(this);
-        //i = new Intent(this, RestClientService.class);
+        mReceiver = new DownloadResultReceiver(new Handler());
+        mReceiver.setReceiver(this);
+        i = new Intent(this, RestClientService.class);
         switch (code) {
             case TASK2_DELETE_MEETING:
             case TASK3_FULL_DESCRIPTION: {
                 i.putExtra(APP_ID, swipeID);
-            } break;
-            case TASK4_PUT_PARTICIPANT:{
+            }
+            break;
+            case TASK4_PUT_PARTICIPANT: {
                 i.putExtra(APP_ID, swipeID);
                 i.putExtra(APP_LASTNAME, lastName);
                 i.putExtra(APP_FIRSTNAME, firstName);
                 i.putExtra(APP_PATONYMIC, patronymic);
                 i.putExtra(APP_POST, post);
-            } break;
-            case TASK5_MEETING_ON_DES:{
+            }
+            break;
+            case TASK5_MEETING_ON_DES: {
                 setProgressBarIndeterminateVisibility(true);
                 i.putExtra(APP_DESCRIPTION, description);
-            } break;
-            case TASK6_SET_MEETING:{
+            }
+            break;
+            case TASK6_SET_MEETING: {
                 i.putExtra(APP_DESCRIPTION, description);
                 i.putExtra(APP_MEETING_NAME, meetingName);
                 i.putExtra(APP_BEGIN_DATE, beginDate);
                 i.putExtra(APP_END_DATE, endDate);
                 i.putExtra(APP_PRIORITY, priority);
-            } break;
+            }
+            break;
         }
         i.putExtra(APP_PREFERENCES_NAME, username);
         i.putExtra(APP_PREFERENCES_PASSWORD, password);
@@ -536,7 +568,6 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 R.layout.dialog_participant, null);
         final AlertDialog.Builder partDialog = new AlertDialog.Builder(this);
         partDialog.setView(participantDialogView)
-                .setMessage(getString(R.string.participantText))
                 .setTitle(R.string.participantTitle)
                 .setIcon(R.drawable.ic_participant)
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -552,18 +583,22 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         EditText ln = (EditText) participantDialogView.findViewById(R.id.lastNameText);
                         EditText patr = (EditText) participantDialogView.findViewById(R.id.patronymicText);
                         EditText pos = (EditText) participantDialogView.findViewById(R.id.postText);
-                        lastName = ln.getText().toString();
-                        firstName = fn.getText().toString();
-                        patronymic = patr.getText().toString();
-                        post = pos.getText().toString();
-                        startSendService(TASK4_PUT_PARTICIPANT);
+                        lastName = ln.getText().toString().trim();
+                        firstName = fn.getText().toString().trim();
+                        patronymic = patr.getText().toString().trim();
+                        post = pos.getText().toString().trim();
+                        if (isOnline())
+                            startSendService(TASK4_PUT_PARTICIPANT);
+                        else
+                            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+
                     }
                 });
 
         partDialog.show();
     }
 
-    private void showMeetingDialog(){
+    private void showMeetingDialog() {
         LayoutInflater factory = LayoutInflater.from(this);
         final View meetingDialogView = factory.inflate(
                 R.layout.dialog_meeting, null);
@@ -571,11 +606,11 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         editBeginDate = (TextView) meetingDialogView.findViewById(R.id.beginDateText);
         editEndDate = (TextView) meetingDialogView.findViewById(R.id.endDateText);
         editBeginTime = (TextView) meetingDialogView.findViewById(R.id.beginTimeText);
-        editEndTime = (TextView)meetingDialogView.findViewById(R.id.endTimeText);
+        editEndTime = (TextView) meetingDialogView.findViewById(R.id.endTimeText);
         editBeginDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               showDataPicker(myCallBack);
+                showDataPicker(myCallBack);
             }
         });
         editEndDate.setOnClickListener(new View.OnClickListener() {
@@ -614,22 +649,25 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                         RadioButton check = (RadioButton) meetingDialogView.findViewById(rad.getCheckedRadioButtonId());
                         TextView eData = (TextView) meetingDialogView.findViewById(R.id.beginDateText);
                         TextView eTime = (TextView) meetingDialogView.findViewById(R.id.beginTimeText);
-                        TextView eEndData =(TextView) meetingDialogView.findViewById(R.id.endDateText);
+                        TextView eEndData = (TextView) meetingDialogView.findViewById(R.id.endDateText);
                         TextView eEndTime = (TextView) meetingDialogView.findViewById(R.id.endTimeText);
 
-                        meetingName = mn.getText().toString();
-                        description = dn.getText().toString();
-                        beginDate = eData.getText().toString()+" "+ eTime.getText().toString();
-                        endDate = eEndData.getText().toString()+" "+ eEndTime.getText().toString();
-                        priority = check.getText().toString();
-                        startSendService(TASK6_SET_MEETING);
+                        meetingName = mn.getText().toString().trim();
+                        description = dn.getText().toString().trim();
+                        beginDate = eData.getText().toString().trim() + " " + eTime.getText().toString().trim();
+                        endDate = eEndData.getText().toString().trim() + " " + eEndTime.getText().toString().trim();
+                        priority = check.getText().toString().trim();
+                        if (isOnline())
+                            startSendService(TASK6_SET_MEETING);
+                        else
+                            Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
                     }
                 });
 
         meetDialog.show();
     }
 
-    private void showDataPicker(DatePickerDialog.OnDateSetListener myCallBack){
+    private void showDataPicker(DatePickerDialog.OnDateSetListener myCallBack) {
         DatePickerDialog tpd = new DatePickerDialog(this, myCallBack, myYear, myMonth, myDay);
         tpd.show();
     }
@@ -641,7 +679,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             myYear = year;
             myMonth = monthOfYear;
             myDay = dayOfMonth;
-            editBeginDate.setText( myYear+"-" + (myMonth+1)+ "-"+myDay );
+            editBeginDate.setText(myYear + "-" + (myMonth + 1) + "-" + myDay);
         }
     };
 
@@ -652,11 +690,11 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             myYear = year;
             myMonth = monthOfYear;
             myDay = dayOfMonth;
-            editEndDate.setText( myYear+"-"+(myMonth+1) + "-" +myDay );
+            editEndDate.setText(myYear + "-" + (myMonth + 1) + "-" + myDay);
         }
     };
 
-    private void showTimePicker(TimePickerDialog.OnTimeSetListener myCallBack){
+    private void showTimePicker(TimePickerDialog.OnTimeSetListener myCallBack) {
         TimePickerDialog tpd = new TimePickerDialog(this, myCallBack, myHour, myMinute, true);
         tpd.show();
     }
@@ -676,11 +714,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             editEndTime.setText(myHour + ":" + myMinute);
         }
     };
+
     private JSONArray readJsonObject() {
         JSONArray array = null;
         String path = this.getFilesDir().getAbsolutePath() + "/" + jsonFileName;
         File file = new File(path);
-        FileInputStream stream =null;
+        FileInputStream stream = null;
         if (file.exists()) {
             try {
                 stream = new FileInputStream(file);
@@ -694,11 +733,11 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 if (jsonStr != null) {
                     array = new JSONArray(jsonStr);
                 }
-            } catch ( JSONException | IOException fnfe) {
+            } catch (JSONException | IOException fnfe) {
                 Log.e(TAG, "readJsonObject " + fnfe.getMessage());
             } finally {
                 try {
-                    if(stream!=null)
+                    if (stream != null)
                         stream.close();
                 } catch (IOException ie) {
                     Log.e(TAG, "readJsonObject " + ie.getMessage());
@@ -711,6 +750,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             return new JSONArray();
         }
     }
+
     class TransferItem {
         private int id;
         private String meetingName;
@@ -844,10 +884,12 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                                                 return true;
                                             }
                                             case R.id.info: {
-                                                //int position = swipeDetector.getPosition();
                                                 TransferItem ti = getItem(pos);
                                                 swipeID = ti.getId();
-                                                startSendService(TASK3_FULL_DESCRIPTION);
+                                                if (isOnline())
+                                                    startSendService(TASK3_FULL_DESCRIPTION);
+                                                else
+                                                    Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
                                                 return true;
                                             }
                                         }
@@ -945,11 +987,16 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
             }
 
             private void swipeRemove() {
-                TransferItem ti = getItem(position);
-                swipeID = ti.getId();
-                remove(ti);
-                startSendService(TASK2_DELETE_MEETING);
-                notifyDataSetChanged();
+                if (isOnline()) {
+                    TransferItem ti = getItem(position);
+                    swipeID = ti.getId();
+                    remove(ti);
+                    startSendService(TASK2_DELETE_MEETING);
+                    notifyDataSetChanged();
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
+
+                }
             }
         }
     }

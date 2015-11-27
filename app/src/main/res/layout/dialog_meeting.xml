@@ -26,8 +26,7 @@
                     android:layout_gravity="center_horizontal"
                     android:inputType="text"
                     android:layout_toRightOf="@+id/metNameTextView"
-                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-                    android:text="Встреча" />
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -61,8 +60,7 @@
                     android:ems="10"
                     android:id="@+id/descriptionText"
                     android:layout_toRightOf="@+id/descriptionTextView"
-                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-                    android:text="Описание" />
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight" />
 
             </RelativeLayout>
 
@@ -195,12 +193,22 @@
                     android:layout_marginTop="6dp"
                     android:paddingLeft="?android:attr/listPreferredItemPaddingLeft" />
 
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/urgentPriority"
+                    android:layout_gravity="right"
+                    android:src="@drawable/ic_urgent"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentRight="true"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"/>
+
                 <RadioGroup
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toRightOf="@+id/ptiorityTextView"
                     android:id="@+id/radioPriority"
-                    >
+                    android:layout_toLeftOf="@+id/urgentPriority">
 
                     <RadioButton
                         android:layout_width="wrap_content"
@@ -225,6 +233,26 @@
                         android:text="@string/pPossible"
                         android:id="@+id/possibleRadio" />
                 </RadioGroup>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/plannedPriority"
+                    android:layout_gravity="right"
+                    android:src="@drawable/ic_planned"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/radioPriority"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"/>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/possiblePrioiity"
+                    android:layout_gravity="right"
+                    android:src="@drawable/ic_possible"
+                    android:layout_alignParentBottom="true"
+                    android:layout_toRightOf="@+id/radioPriority"
+                    android:paddingRight="?android:attr/listPreferredItemPaddingRight"/>
             </RelativeLayout>
         </LinearLayout>
     </ScrollView>

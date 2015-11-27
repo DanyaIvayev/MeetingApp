@@ -121,15 +121,15 @@ public class RestClientService extends IntentService {
                 } catch (UnsupportedEncodingException e) {
                     Log.e(TAG, "onHandleIntent " + e.getMessage());
                 }
-            }
+            } break;
             case TASK6_SET_MEETING: {
                 postMeeting(receiver, i);
-            }
+            } break;
             case TASK7_BACKGROUND_RECEIVE:{
                 url = getString(R.string.urlGetMeeting);
                 url += "?" + APP_PREFERENCES_NAME + "=" + username + "&" + APP_PREFERENCES_PASSWORD + "=" + password;
                 getMeetingsBackground(receiver, url);
-            }
+            } break;
 
         }
     }
@@ -161,10 +161,11 @@ public class RestClientService extends IntentService {
                                         bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно, либо ошибка на сервере");
                                         bundle.putInt(APP_CODE_TASK, TASK4_PUT_PARTICIPANT);
                                         receiver.send(STATUS_ERROR, bundle);
-                                    } else {
-                                        bundle.putInt(APP_CODE_TASK, TASK4_PUT_PARTICIPANT);
-                                        receiver.send(STATUS_FINISHED, bundle);
+                                    }else {
+                                            bundle.putInt(APP_CODE_TASK, TASK4_PUT_PARTICIPANT);
+                                            receiver.send(STATUS_FINISHED, bundle);
                                     }
+
                                     Log.d(TAG, "onResponse " + response.toString());
                                 }
                             },
@@ -216,6 +217,10 @@ public class RestClientService extends IntentService {
                                 if (response.toString().equals("[{\"response\":\"false\"}]")) {
                                     bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно");
                                     bundle.putInt(APP_CODE_TASK, code);
+                                    receiver.send(STATUS_ERROR, bundle);
+                                }  else if(response.toString().equals("[]")) {
+                                    bundle.putString(Intent.EXTRA_TEXT, "Запрошенные данные отсутствуют");
+                                    bundle.putInt(APP_CODE_TASK,code);
                                     receiver.send(STATUS_ERROR, bundle);
                                 } else {
                                     bundle.putString("result", response.toString());
@@ -380,26 +385,25 @@ public class RestClientService extends IntentService {
                                         JSONArray read = readJsonObject();
                                         if(read!=null){
                                             if(!array.equals(read)){
-
+                                                writeJsonObject(array);
                                                 if(!checkApp()) {
-                                                    writeJsonObject(array);
                                                     showNotification();
                                                 } else {
-                                                        bundle.putString("result", response.toString());
-                                                        bundle.putInt(APP_CODE_TASK, TASK7_BACKGROUND_RECEIVE);
-                                                        receiver.send(STATUS_FINISHED, bundle);
+                                                    Intent i = new Intent("android.intent.action.MAIN").putExtra("msg", "Received");
+                                                    sendBroadcast(i);
                                                     Log.d(TAG, "onResponse " + response.toString());
                                                 }
                                             }
                                         }
-                                    } else {
+                                    }
+                                } else {
                                         if(checkApp()) {
-                                            bundle.putString(Intent.EXTRA_TEXT, "Логин и пароль указаны неверно");
-                                            bundle.putInt(APP_CODE_TASK, TASK7_BACKGROUND_RECEIVE);
-                                            receiver.send(STATUS_ERROR, bundle);
+                                            Intent i = new Intent("android.intent.action.MAIN").putExtra("msg", "Логин и пароль указаны неверно, либо ошибка на сервере");
+                                            sendBroadcast(i);
+                                            Log.d(TAG, "onResponse " + response.toString());
                                         }
                                     }
-                                }
+
                                 Log.d(TAG, "onResponse " + response.toString());
 
                             }
@@ -408,11 +412,9 @@ public class RestClientService extends IntentService {
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 if (checkApp()) {
-                                    Bundle bundle = new Bundle();
-                                    Log.e(TAG, "onErrorResponse Request failed: " + error.toString());
-                                    bundle.putString(Intent.EXTRA_TEXT, "Сервер не доступен: Превышено время ожидания");
-                                    bundle.putInt(APP_CODE_TASK, TASK7_BACKGROUND_RECEIVE);
-                                    receiver.send(STATUS_ERROR, bundle);
+                                    Intent i = new Intent("android.intent.action.MAIN").putExtra("msg", "Сервер не доступен: Превышено время ожидания");
+                                    sendBroadcast(i);
+
                                 }
                             }
                         }
@@ -494,6 +496,7 @@ public class RestClientService extends IntentService {
             return new JSONArray();
         }
     }
+
     private void showNotification(){
         mManager = (NotificationManager) getApplicationContext().getSystemService(getApplicationContext().NOTIFICATION_SERVICE);
         Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
@@ -503,7 +506,7 @@ public class RestClientService extends IntentService {
         intent1.putExtra("isStartedFromNotification", true);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT);
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        notification.setLatestEventInfo(getApplicationContext(), "AlarmManagerDemo", "New meetings was received", pendingNotificationIntent);
+        notification.setLatestEventInfo(getApplicationContext(), "MeetingApp", "New meetings was received", pendingNotificationIntent);
         mManager.notify(0, notification);
     }
 }
