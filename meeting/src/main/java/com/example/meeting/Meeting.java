@@ -100,10 +100,8 @@ public class Meeting {
         if (participants != null) {
             result.append(", \"participants\":" );
 
-            for (Participant p : participants) {
-                result.append(participants.toString() + ", ");
-            }
-            result=new StringBuffer(result.substring(0, result.length()-2));
+            result.append(participants.toString());
+            //result=new StringBuffer(result.substring(0, result.length()-2));
 
         }
         result.append( "}]");

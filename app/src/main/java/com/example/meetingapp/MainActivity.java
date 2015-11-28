@@ -155,26 +155,27 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         };
         //registering our receiver
         this.registerReceiver(message, intentFilter);
-        boolean isOnline = isOnline();
-        if (getIntent().getBooleanExtra("isStartedFromNotification", false)) {
-            array = readJsonObject();
-            fillListView();
-        } else {
 
-            preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-            if (preferences != null) {
-                if (preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)) {
-                    username = preferences.getString(APP_PREFERENCES_NAME, "");
-                    password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
+        boolean isOnline = isOnline();
+        preferences = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+        if (preferences != null) {
+            if (preferences.contains(APP_PREFERENCES_NAME) && preferences.contains(APP_PREFERENCES_PASSWORD)) {
+                username = preferences.getString(APP_PREFERENCES_NAME, "");
+                password = preferences.getString(APP_PREFERENCES_PASSWORD, "");
+                if (getIntent().getBooleanExtra("isStartedFromNotification", false)) {
+                    array = readJsonObject();
+                    fillListView();
+                } else {
                     if (!isOnline)
                         Toast.makeText(MainActivity.this, R.string.workInternet, Toast.LENGTH_SHORT).show();
                     else {
                         startSendService(TASK1_RECEIVE_MEETINGS);
                     }
-                } else {
-                    Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
                 }
+            } else {
+                Toast.makeText(MainActivity.this, R.string.missAccount, Toast.LENGTH_LONG).show();
             }
+
         }
     }
 
