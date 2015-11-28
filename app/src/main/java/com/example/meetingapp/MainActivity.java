@@ -128,7 +128,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
         Intent myReceiver = new Intent(this, BroadReceive.class);
         pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myReceiver, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 150000, pendingIntent);
+        alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 6000, pendingIntent);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
         getOverflowMenu();
@@ -212,6 +212,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED: {
                         Toast.makeText(this, R.string.delete_message, Toast.LENGTH_SHORT).show();
+                        startSendService(TASK1_RECEIVE_MEETINGS);
                     }
                     break;
                     case RestClientService.STATUS_ERROR: {
@@ -242,6 +243,7 @@ public class MainActivity extends ActionBarActivity implements DownloadResultRec
                 switch (resultCode) {
                     case RestClientService.STATUS_FINISHED: {
                         Toast.makeText(this, R.string.participant_add_message, Toast.LENGTH_SHORT).show();
+                        startSendService(TASK1_RECEIVE_MEETINGS);
                     }
                     break;
                     case RestClientService.STATUS_ERROR: {

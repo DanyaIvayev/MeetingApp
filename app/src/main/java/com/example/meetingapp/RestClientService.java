@@ -162,6 +162,7 @@ public class RestClientService extends IntentService {
                                         bundle.putInt(APP_CODE_TASK, TASK4_PUT_PARTICIPANT);
                                         receiver.send(STATUS_ERROR, bundle);
                                     }else {
+
                                             bundle.putInt(APP_CODE_TASK, TASK4_PUT_PARTICIPANT);
                                             receiver.send(STATUS_FINISHED, bundle);
                                     }
@@ -223,6 +224,8 @@ public class RestClientService extends IntentService {
                                     bundle.putInt(APP_CODE_TASK,code);
                                     receiver.send(STATUS_ERROR, bundle);
                                 } else {
+                                    if(code==TASK1_RECEIVE_MEETINGS)
+                                        writeJsonObject(array);
                                     bundle.putString("result", response.toString());
                                     bundle.putInt(APP_CODE_TASK, code);
                                     receiver.send(STATUS_FINISHED, bundle);
